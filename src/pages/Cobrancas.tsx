@@ -1,24 +1,8 @@
 
 import React, { useState } from 'react';
 import { DashboardLayout } from '@/components/DashboardLayout';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
 import {
   Table,
   TableBody,
@@ -27,271 +11,199 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Calendar, DollarSign, ExternalLink } from 'lucide-react';
-import { toast } from '@/hooks/use-toast';
+import { Plus, CheckCircle, Clock, AlertCircle } from 'lucide-react';
 
-interface Cobranca {
-  id: string;
-  clientName: string;
-  valor: number;
-  status: 'Pago' | 'Pendente' | 'Vencido';
-  vencimento: string;
-  paymentUrl?: string;
-}
-
-const initialCobrancas: Cobranca[] = [
-  {
-    id: '1',
-    clientName: 'Maria Silva',
-    valor: 1200,
-    status: 'Pago',
-    vencimento: '2024-01-15',
-    paymentUrl: 'https://mercadopago.com.br/checkout/123',
-  },
-  {
-    id: '2',
-    clientName: 'João Santos',
-    valor: 850,
-    status: 'Pendente',
-    vencimento: '2024-01-20',
-    paymentUrl: 'https://mercadopago.com.br/checkout/456',
-  },
-  {
-    id: '3',
-    clientName: 'Ana Costa',
-    valor: 600,
-    status: 'Vencido',
-    vencimento: '2024-01-10',
-    paymentUrl: 'https://mercadopago.com.br/checkout/789',
-  },
-];
-
-export default function Cobrancas() {
-  const [cobrancas, setCobrancas] = useState<Cobranca[]>(initialCobrancas);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [formData, setFormData] = useState({
-    clientName: '',
-    valor: '',
-    vencimento: '',
-    paymentUrl: '',
-  });
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    const newCobranca: Cobranca = {
-      id: Date.now().toString(),
-      clientName: formData.clientName,
-      valor: parseFloat(formData.valor),
+const Cobrancas = () => {
+  const [receitas, setReceitas] = useState([
+    {
+      id: 1,
+      cliente: 'Empresa ABC Ltda',
+      valor: 2800,
+      status: 'Pago',
+      data: '2024-01-15'
+    },
+    {
+      id: 2,
+      cliente: 'Startup XYZ',
+      valor: 1500,
       status: 'Pendente',
-      vencimento: formData.vencimento,
-      paymentUrl: formData.paymentUrl,
-    };
+      data: '2024-01-20'
+    },
+    {
+      id: 3,
+      cliente: 'Loja Virtual 123',
+      valor: 3200,
+      status: 'Vencido',
+      data: '2024-01-10'
+    },
+    {
+      id: 4,
+      cliente: 'Consultoria Beta',
+      valor: 2100,
+      status: 'Pago',
+      data: '2024-01-18'
+    },
+    {
+      id: 5,
+      cliente: 'E-commerce Gama',
+      valor: 4500,
+      status: 'Pendente',
+      data: '2024-01-25'
+    }
+  ]);
 
-    setCobrancas([...cobrancas, newCobranca]);
-    setFormData({ clientName: '', valor: '', vencimento: '', paymentUrl: '' });
-    setIsDialogOpen(false);
-    
-    toast({
-      title: "Cobrança criada com sucesso!",
-      description: `Cobrança de R$ ${formData.valor} para ${formData.clientName} foi adicionada.`,
-    });
-  };
-
-  const getStatusColor = (status: string) => {
+  const getStatusBadge = (status: string) => {
     switch (status) {
       case 'Pago':
-        return 'bg-green-500/10 text-green-400 border-green-500/20';
+        return (
+          <Badge className="bg-green-500/20 text-green-400 border-green-500/30">
+            <CheckCircle className="w-3 h-3 mr-1" />
+            Pago
+          </Badge>
+        );
       case 'Pendente':
-        return 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20';
+        return (
+          <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30">
+            <Clock className="w-3 h-3 mr-1" />
+            Pendente
+          </Badge>
+        );
       case 'Vencido':
-        return 'bg-red-500/10 text-red-400 border-red-500/20';
+        return (
+          <Badge className="bg-red-500/20 text-red-400 border-red-500/30">
+            <AlertCircle className="w-3 h-3 mr-1" />
+            Vencido
+          </Badge>
+        );
       default:
-        return 'bg-gray-500/10 text-gray-400 border-gray-500/20';
+        return null;
     }
-  };
-
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-    }).format(value);
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('pt-BR');
   };
 
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold text-white mb-2">Cobranças</h1>
-            <p className="text-gray-400">Gerencie suas cobranças e pagamentos</p>
+            <h1 className="text-3xl font-bold text-white mb-2">Receitas e Cobranças</h1>
+            <p className="text-gray-400">Gerencie as receitas e cobranças de clientes</p>
           </div>
-          
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <Dialog>
             <DialogTrigger asChild>
               <Button className="bg-primary hover:bg-primary/90">
-                <Plus className="h-4 w-4 mr-2" />
+                <Plus className="mr-2 h-4 w-4" />
                 Nova Cobrança
               </Button>
             </DialogTrigger>
             <DialogContent className="bg-dark-200 border-dark-300">
               <DialogHeader>
-                <DialogTitle className="text-white">Criar Nova Cobrança</DialogTitle>
+                <DialogTitle className="text-white">Nova Cobrança</DialogTitle>
               </DialogHeader>
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-4 pt-4">
                 <div className="space-y-2">
-                  <Label htmlFor="clientName" className="text-gray-300">Cliente</Label>
-                  <Select onValueChange={(value) => setFormData({ ...formData, clientName: value })}>
-                    <SelectTrigger className="bg-dark-300 border-dark-400 text-white">
-                      <SelectValue placeholder="Selecione um cliente" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-dark-300 border-dark-400">
-                      <SelectItem value="Maria Silva">Maria Silva</SelectItem>
-                      <SelectItem value="João Santos">João Santos</SelectItem>
-                      <SelectItem value="Ana Costa">Ana Costa</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <label className="text-sm font-medium text-gray-300">Nome do Cliente</label>
+                  <input
+                    type="text"
+                    className="w-full px-3 py-2 bg-dark-300 border border-dark-300 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                    placeholder="Digite o nome do cliente"
+                  />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="valor" className="text-gray-300">Valor (R$)</Label>
-                  <Input
-                    id="valor"
+                  <label className="text-sm font-medium text-gray-300">Valor da Cobrança</label>
+                  <input
                     type="number"
-                    step="0.01"
-                    value={formData.valor}
-                    onChange={(e) => setFormData({ ...formData, valor: e.target.value })}
-                    className="bg-dark-300 border-dark-400 text-white"
-                    required
+                    className="w-full px-3 py-2 bg-dark-300 border border-dark-300 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                    placeholder="0,00"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="vencimento" className="text-gray-300">Data de Vencimento</Label>
-                  <Input
-                    id="vencimento"
+                  <label className="text-sm font-medium text-gray-300">Data de Vencimento</label>
+                  <input
                     type="date"
-                    value={formData.vencimento}
-                    onChange={(e) => setFormData({ ...formData, vencimento: e.target.value })}
-                    className="bg-dark-300 border-dark-400 text-white"
-                    required
+                    className="w-full px-3 py-2 bg-dark-300 border border-dark-300 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-primary"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="paymentUrl" className="text-gray-300">Link de Pagamento</Label>
-                  <Input
-                    id="paymentUrl"
+                  <label className="text-sm font-medium text-gray-300">Link de Pagamento</label>
+                  <input
                     type="url"
-                    placeholder="https://mercadopago.com.br/checkout/..."
-                    value={formData.paymentUrl}
-                    onChange={(e) => setFormData({ ...formData, paymentUrl: e.target.value })}
-                    className="bg-dark-300 border-dark-400 text-white"
+                    className="w-full px-3 py-2 bg-dark-300 border border-dark-300 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                    placeholder="https://mercadopago.com/..."
                   />
                 </div>
-                <div className="flex gap-2 pt-4">
-                  <Button type="submit" className="bg-primary hover:bg-primary/90 flex-1">
-                    Criar Cobrança
-                  </Button>
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    onClick={() => setIsDialogOpen(false)}
-                    className="border-dark-400 text-gray-300 hover:bg-dark-300"
-                  >
-                    Cancelar
-                  </Button>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-300">Status</label>
+                  <select className="w-full px-3 py-2 bg-dark-300 border border-dark-300 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-primary">
+                    <option value="Pendente">Pendente</option>
+                    <option value="Pago">Pago</option>
+                    <option value="Vencido">Vencido</option>
+                  </select>
                 </div>
-              </form>
+                <Button className="w-full bg-primary hover:bg-primary/90">
+                  Criar Cobrança
+                </Button>
+              </div>
             </DialogContent>
           </Dialog>
         </div>
 
-        {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
           <Card className="glass-card">
             <CardContent className="p-4">
-              <div className="flex items-center space-x-2">
-                <DollarSign className="h-5 w-5 text-green-400" />
-                <div>
-                  <p className="text-sm text-gray-400">Total Recebido</p>
-                  <p className="text-xl font-bold text-white">R$ 1.200</p>
-                </div>
-              </div>
-            </CardContent>
+              <div className="text-2xl font-bold text-white">R$ 14.100</div>
+              <p className="text-gray-400 text-sm">Total de Receitas</p>
+            </div>
           </Card>
           <Card className="glass-card">
             <CardContent className="p-4">
-              <div className="flex items-center space-x-2">
-                <Calendar className="h-5 w-5 text-yellow-400" />
-                <div>
-                  <p className="text-sm text-gray-400">Pendente</p>
-                  <p className="text-xl font-bold text-white">R$ 850</p>
-                </div>
-              </div>
-            </CardContent>
+              <div className="text-2xl font-bold text-green-400">2</div>
+              <p className="text-gray-400 text-sm">Pagas</p>
+            </Card>
           </Card>
           <Card className="glass-card">
             <CardContent className="p-4">
-              <div className="flex items-center space-x-2">
-                <Calendar className="h-5 w-5 text-red-400" />
-                <div>
-                  <p className="text-sm text-gray-400">Vencido</p>
-                  <p className="text-xl font-bold text-white">R$ 600</p>
-                </div>
-              </div>
-            </CardContent>
+              <div className="text-2xl font-bold text-yellow-400">2</div>
+              <p className="text-gray-400 text-sm">Pendentes</p>
+            </Card>
+          </Card>
+          <Card className="glass-card">
+            <CardContent className="p-4">
+              <div className="text-2xl font-bold text-red-400">1</div>
+              <p className="text-gray-400 text-sm">Vencidas</p>
+            </Card>
           </Card>
         </div>
 
-        {/* Cobrancas Table */}
         <Card className="glass-card">
           <CardHeader>
-            <CardTitle className="text-white">Lista de Cobranças</CardTitle>
+            <CardTitle className="text-white">Lista de Receitas</CardTitle>
           </CardHeader>
           <CardContent>
             <Table>
               <TableHeader>
                 <TableRow className="border-dark-300">
-                  <TableHead className="text-gray-300">Cliente</TableHead>
-                  <TableHead className="text-gray-300">Valor</TableHead>
+                  <TableHead className="text-gray-300">Nome do Cliente</TableHead>
+                  <TableHead className="text-gray-300">Valor da Cobrança</TableHead>
                   <TableHead className="text-gray-300">Status</TableHead>
-                  <TableHead className="text-gray-300">Vencimento</TableHead>
-                  <TableHead className="text-gray-300">Ações</TableHead>
+                  <TableHead className="text-gray-300">Data</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {cobrancas.map((cobranca) => (
-                  <TableRow key={cobranca.id} className="border-dark-300">
-                    <TableCell className="text-white font-medium">
-                      {cobranca.clientName}
-                    </TableCell>
-                    <TableCell className="text-white">
-                      {formatCurrency(cobranca.valor)}
-                    </TableCell>
-                    <TableCell>
-                      <Badge className={getStatusColor(cobranca.status)}>
-                        {cobranca.status}
-                      </Badge>
-                    </TableCell>
+                {receitas.map((receita) => (
+                  <TableRow key={receita.id} className="border-dark-300 hover:bg-dark-300/50">
+                    <TableCell className="text-white font-medium">{receita.cliente}</TableCell>
+                    <TableCell className="text-white">R$ {receita.valor.toLocaleString()}</TableCell>
+                    <TableCell>{getStatusBadge(receita.status)}</TableCell>
                     <TableCell className="text-gray-300">
-                      {formatDate(cobranca.vencimento)}
-                    </TableCell>
-                    <TableCell>
-                      {cobranca.paymentUrl && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-primary hover:text-primary/80"
-                          onClick={() => window.open(cobranca.paymentUrl, '_blank')}
-                        >
-                          <ExternalLink className="h-4 w-4 mr-1" />
-                          Ver Link
-                        </Button>
-                      )}
+                      {new Date(receita.data).toLocaleDateString('pt-BR')}
                     </TableCell>
                   </TableRow>
                 ))}
@@ -302,4 +214,6 @@ export default function Cobrancas() {
       </div>
     </DashboardLayout>
   );
-}
+};
+
+export default Cobrancas;

@@ -19,22 +19,22 @@ const menuItems = [
     icon: LayoutDashboard,
   },
   {
-    title: 'Clientes',
+    title: 'Pagamentos Funcionários',
     url: '/clientes',
     icon: Users,
   },
   {
-    title: 'Cobranças',
+    title: 'Receitas e Cobranças',
     url: '/cobrancas',
     icon: DollarSign,
   },
   {
-    title: 'Orçamentos',
+    title: 'Orçamentos e Propostas',
     url: '/orcamentos',
     icon: FileText,
   },
   {
-    title: 'Campanhas',
+    title: 'Ferramentas de Marketing',
     url: '/campanhas',
     icon: Megaphone,
   },
@@ -48,7 +48,7 @@ export function AppSidebar() {
     <div className="flex flex-col h-screen w-64 bg-dark-200 border-r border-dark-300">
       {/* Logo */}
       <div className="p-6 border-b border-dark-300">
-        <h1 className="text-2xl font-bold gradient-text">Painel Criart</h1>
+        <h1 className="text-2xl font-bold gradient-text">Financeiro Criart</h1>
       </div>
 
       {/* Navigation */}

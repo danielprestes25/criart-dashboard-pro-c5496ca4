@@ -19,7 +19,7 @@ export function AppHeader() {
   return (
     <header className="h-16 bg-dark-200 border-b border-dark-300 flex items-center justify-between px-6">
       <div className="flex items-center space-x-4">
-        <h2 className="text-lg font-semibold text-white">Bem-vindo de volta!</h2>
+        <h2 className="text-lg font-semibold text-white">Painel Financeiro Central</h2>
       </div>
 
       <DropdownMenu>
