@@ -160,25 +160,25 @@ const Cobrancas = () => {
             <CardContent className="p-4">
               <div className="text-2xl font-bold text-white">R$ 14.100</div>
               <p className="text-gray-400 text-sm">Total de Receitas</p>
-            </div>
+            </CardContent>
           </Card>
           <Card className="glass-card">
             <CardContent className="p-4">
               <div className="text-2xl font-bold text-green-400">2</div>
               <p className="text-gray-400 text-sm">Pagas</p>
-            </Card>
+            </CardContent>
           </Card>
           <Card className="glass-card">
             <CardContent className="p-4">
               <div className="text-2xl font-bold text-yellow-400">2</div>
               <p className="text-gray-400 text-sm">Pendentes</p>
-            </Card>
+            </CardContent>
           </Card>
           <Card className="glass-card">
             <CardContent className="p-4">
               <div className="text-2xl font-bold text-red-400">1</div>
               <p className="text-gray-400 text-sm">Vencidas</p>
-            </Card>
+            </CardContent>
           </Card>
         </div>
 
