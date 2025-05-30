@@ -19,7 +19,9 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Plus, CheckCircle, Clock } from 'lucide-react';
+import { Plus, CheckCircle, Clock, Edit, Trash2 } from 'lucide-react';
+import { ConfirmDialog } from '@/components/ConfirmDialog';
+import { useToast } from '@/hooks/use-toast';
 
 const Clientes = () => {
   const [funcionarios, setFuncionarios] = useState([
@@ -57,6 +59,111 @@ const Clientes = () => {
     }
   ]);
 
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingFuncionario, setEditingFuncionario] = useState<any>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; id: number | null }>({
+    isOpen: false,
+    id: null
+  });
+  const [formData, setFormData] = useState({
+    nome: '',
+    cargo: '',
+    salario: '',
+    dataPagamento: '',
+    status: 'Pendente'
+  });
+  const { toast } = useToast();
+
+  const resetForm = () => {
+    setFormData({
+      nome: '',
+      cargo: '',
+      salario: '',
+      dataPagamento: '',
+      status: 'Pendente'
+    });
+    setEditingFuncionario(null);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!formData.nome || !formData.cargo || !formData.salario || !formData.dataPagamento) {
+      toast({
+        title: 'Erro',
+        description: 'Preencha todos os campos obrigatórios',
+        type: 'error'
+      });
+      return;
+    }
+
+    if (editingFuncionario) {
+      setFuncionarios(prev => prev.map(funcionario => 
+        funcionario.id === editingFuncionario.id 
+          ? {
+              ...funcionario,
+              nome: formData.nome,
+              cargo: formData.cargo,
+              salario: parseFloat(formData.salario),
+              dataPagamento: formData.dataPagamento,
+              status: formData.status
+            }
+          : funcionario
+      ));
+      toast({
+        title: 'Sucesso',
+        description: 'Funcionário atualizado com sucesso',
+        type: 'success'
+      });
+    } else {
+      const newFuncionario = {
+        id: Math.max(...funcionarios.map(f => f.id)) + 1,
+        nome: formData.nome,
+        cargo: formData.cargo,
+        salario: parseFloat(formData.salario),
+        dataPagamento: formData.dataPagamento,
+        status: formData.status
+      };
+      setFuncionarios(prev => [...prev, newFuncionario]);
+      toast({
+        title: 'Sucesso',
+        description: 'Funcionário adicionado com sucesso',
+        type: 'success'
+      });
+    }
+
+    resetForm();
+    setIsDialogOpen(false);
+  };
+
+  const handleEdit = (funcionario: any) => {
+    setEditingFuncionario(funcionario);
+    setFormData({
+      nome: funcionario.nome,
+      cargo: funcionario.cargo,
+      salario: funcionario.salario.toString(),
+      dataPagamento: funcionario.dataPagamento,
+      status: funcionario.status
+    });
+    setIsDialogOpen(true);
+  };
+
+  const handleDelete = (id: number) => {
+    setDeleteConfirm({ isOpen: true, id });
+  };
+
+  const confirmDelete = () => {
+    if (deleteConfirm.id) {
+      setFuncionarios(prev => prev.filter(funcionario => funcionario.id !== deleteConfirm.id));
+      toast({
+        title: 'Sucesso',
+        description: 'Funcionário excluído com sucesso',
+        type: 'success'
+      });
+    }
+    setDeleteConfirm({ isOpen: false, id: null });
+  };
+
   const getStatusBadge = (status: string) => {
     return status === 'Pago' ? (
       <Badge className="bg-green-500/20 text-green-400 border-green-500/30">
@@ -79,7 +186,10 @@ const Clientes = () => {
             <h1 className="text-3xl font-bold text-white mb-2">Pagamentos de Funcionários</h1>
             <p className="text-gray-400">Gerencie os pagamentos da equipe</p>
           </div>
-          <Dialog>
+          <Dialog open={isDialogOpen} onOpenChange={(open) => {
+            setIsDialogOpen(open);
+            if (!open) resetForm();
+          }}>
             <DialogTrigger asChild>
               <Button className="bg-primary hover:bg-primary/90">
                 <Plus className="mr-2 h-4 w-4" />
@@ -88,51 +198,70 @@ const Clientes = () => {
             </DialogTrigger>
             <DialogContent className="bg-dark-200 border-dark-300">
               <DialogHeader>
-                <DialogTitle className="text-white">Novo Pagamento de Funcionário</DialogTitle>
+                <DialogTitle className="text-white">
+                  {editingFuncionario ? 'Editar Pagamento' : 'Novo Pagamento de Funcionário'}
+                </DialogTitle>
               </DialogHeader>
-              <div className="space-y-4 pt-4">
+              <form onSubmit={handleSubmit} className="space-y-4 pt-4">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-300">Nome do Funcionário</label>
+                  <label className="text-sm font-medium text-gray-300">Nome do Funcionário *</label>
                   <input
                     type="text"
+                    value={formData.nome}
+                    onChange={(e) => setFormData({...formData, nome: e.target.value})}
                     className="w-full px-3 py-2 bg-dark-300 border border-dark-300 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-primary"
                     placeholder="Digite o nome completo"
+                    required
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-300">Cargo</label>
+                  <label className="text-sm font-medium text-gray-300">Cargo *</label>
                   <input
                     type="text"
+                    value={formData.cargo}
+                    onChange={(e) => setFormData({...formData, cargo: e.target.value})}
                     className="w-full px-3 py-2 bg-dark-300 border border-dark-300 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-primary"
                     placeholder="Ex: Desenvolvedor, Designer"
+                    required
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-300">Valor do Salário</label>
+                  <label className="text-sm font-medium text-gray-300">Valor do Salário *</label>
                   <input
                     type="number"
+                    step="0.01"
+                    value={formData.salario}
+                    onChange={(e) => setFormData({...formData, salario: e.target.value})}
                     className="w-full px-3 py-2 bg-dark-300 border border-dark-300 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-primary"
                     placeholder="0,00"
+                    required
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-300">Data de Pagamento</label>
+                  <label className="text-sm font-medium text-gray-300">Data de Pagamento *</label>
                   <input
                     type="date"
+                    value={formData.dataPagamento}
+                    onChange={(e) => setFormData({...formData, dataPagamento: e.target.value})}
                     className="w-full px-3 py-2 bg-dark-300 border border-dark-300 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                    required
                   />
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-gray-300">Status</label>
-                  <select className="w-full px-3 py-2 bg-dark-300 border border-dark-300 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-primary">
+                  <select 
+                    value={formData.status}
+                    onChange={(e) => setFormData({...formData, status: e.target.value})}
+                    className="w-full px-3 py-2 bg-dark-300 border border-dark-300 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                  >
                     <option value="Pendente">Pendente</option>
                     <option value="Pago">Pago</option>
                   </select>
                 </div>
-                <Button className="w-full bg-primary hover:bg-primary/90">
-                  Salvar Pagamento
+                <Button type="submit" className="w-full bg-primary hover:bg-primary/90">
+                  {editingFuncionario ? 'Atualizar Pagamento' : 'Salvar Pagamento'}
                 </Button>
-              </div>
+              </form>
             </DialogContent>
           </Dialog>
         </div>
@@ -150,6 +279,7 @@ const Clientes = () => {
                   <TableHead className="text-gray-300">Salário</TableHead>
                   <TableHead className="text-gray-300">Data do Pagamento</TableHead>
                   <TableHead className="text-gray-300">Status</TableHead>
+                  <TableHead className="text-gray-300">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -162,6 +292,26 @@ const Clientes = () => {
                       {new Date(funcionario.dataPagamento).toLocaleDateString('pt-BR')}
                     </TableCell>
                     <TableCell>{getStatusBadge(funcionario.status)}</TableCell>
+                    <TableCell>
+                      <div className="flex space-x-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEdit(funcionario)}
+                          className="text-primary hover:text-primary/80"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDelete(funcionario.id)}
+                          className="text-red-400 hover:text-red-300"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -169,6 +319,14 @@ const Clientes = () => {
           </CardContent>
         </Card>
       </div>
+
+      <ConfirmDialog
+        isOpen={deleteConfirm.isOpen}
+        onClose={() => setDeleteConfirm({ isOpen: false, id: null })}
+        onConfirm={confirmDelete}
+        title="Excluir Funcionário"
+        description="Tem certeza que deseja excluir este funcionário? Esta ação não pode ser desfeita."
+      />
     </DashboardLayout>
   );
 };

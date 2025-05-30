@@ -19,7 +19,9 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Plus, CheckCircle, Clock, AlertCircle } from 'lucide-react';
+import { Plus, CheckCircle, Clock, AlertCircle, Edit, Trash2 } from 'lucide-react';
+import { ConfirmDialog } from '@/components/ConfirmDialog';
+import { useToast } from '@/hooks/use-toast';
 
 const Campanhas = () => {
   const [ferramentas, setFerramentas] = useState([
@@ -67,6 +69,106 @@ const Campanhas = () => {
     }
   ]);
 
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingFerramenta, setEditingFerramenta] = useState<any>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; id: number | null }>({
+    isOpen: false,
+    id: null
+  });
+  const [formData, setFormData] = useState({
+    nome: '',
+    tipo: '',
+    valorMensal: '',
+    status: 'A pagar'
+  });
+  const { toast } = useToast();
+
+  const resetForm = () => {
+    setFormData({
+      nome: '',
+      tipo: '',
+      valorMensal: '',
+      status: 'A pagar'
+    });
+    setEditingFerramenta(null);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!formData.nome || !formData.tipo || !formData.valorMensal) {
+      toast({
+        title: 'Erro',
+        description: 'Preencha todos os campos obrigatórios',
+        type: 'error'
+      });
+      return;
+    }
+
+    if (editingFerramenta) {
+      setFerramentas(prev => prev.map(ferramenta => 
+        ferramenta.id === editingFerramenta.id 
+          ? {
+              ...ferramenta,
+              nome: formData.nome,
+              tipo: formData.tipo,
+              valorMensal: parseFloat(formData.valorMensal),
+              status: formData.status
+            }
+          : ferramenta
+      ));
+      toast({
+        title: 'Sucesso',
+        description: 'Ferramenta atualizada com sucesso',
+        type: 'success'
+      });
+    } else {
+      const newFerramenta = {
+        id: Math.max(...ferramentas.map(f => f.id)) + 1,
+        nome: formData.nome,
+        tipo: formData.tipo,
+        valorMensal: parseFloat(formData.valorMensal),
+        status: formData.status
+      };
+      setFerramentas(prev => [...prev, newFerramenta]);
+      toast({
+        title: 'Sucesso',
+        description: 'Ferramenta adicionada com sucesso',
+        type: 'success'
+      });
+    }
+
+    resetForm();
+    setIsDialogOpen(false);
+  };
+
+  const handleEdit = (ferramenta: any) => {
+    setEditingFerramenta(ferramenta);
+    setFormData({
+      nome: ferramenta.nome,
+      tipo: ferramenta.tipo,
+      valorMensal: ferramenta.valorMensal.toString(),
+      status: ferramenta.status
+    });
+    setIsDialogOpen(true);
+  };
+
+  const handleDelete = (id: number) => {
+    setDeleteConfirm({ isOpen: true, id });
+  };
+
+  const confirmDelete = () => {
+    if (deleteConfirm.id) {
+      setFerramentas(prev => prev.filter(ferramenta => ferramenta.id !== deleteConfirm.id));
+      toast({
+        title: 'Sucesso',
+        description: 'Ferramenta excluída com sucesso',
+        type: 'success'
+      });
+    }
+    setDeleteConfirm({ isOpen: false, id: null });
+  };
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'Pago':
@@ -113,7 +215,10 @@ const Campanhas = () => {
             <h1 className="text-3xl font-bold text-white mb-2">Ferramentas de Marketing</h1>
             <p className="text-gray-400">Gerencie gastos com ferramentas e plataformas</p>
           </div>
-          <Dialog>
+          <Dialog open={isDialogOpen} onOpenChange={(open) => {
+            setIsDialogOpen(open);
+            if (!open) resetForm();
+          }}>
             <DialogTrigger asChild>
               <Button className="bg-primary hover:bg-primary/90">
                 <Plus className="mr-2 h-4 w-4" />
@@ -122,20 +227,30 @@ const Campanhas = () => {
             </DialogTrigger>
             <DialogContent className="bg-dark-200 border-dark-300">
               <DialogHeader>
-                <DialogTitle className="text-white">Registrar Nova Ferramenta</DialogTitle>
+                <DialogTitle className="text-white">
+                  {editingFerramenta ? 'Editar Ferramenta' : 'Registrar Nova Ferramenta'}
+                </DialogTitle>
               </DialogHeader>
-              <div className="space-y-4 pt-4">
+              <form onSubmit={handleSubmit} className="space-y-4 pt-4">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-300">Nome da Ferramenta</label>
+                  <label className="text-sm font-medium text-gray-300">Nome da Ferramenta *</label>
                   <input
                     type="text"
+                    value={formData.nome}
+                    onChange={(e) => setFormData({...formData, nome: e.target.value})}
                     className="w-full px-3 py-2 bg-dark-300 border border-dark-300 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-primary"
                     placeholder="Ex: RD Station, Meta Ads"
+                    required
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-300">Categoria</label>
-                  <select className="w-full px-3 py-2 bg-dark-300 border border-dark-300 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-primary">
+                  <label className="text-sm font-medium text-gray-300">Categoria *</label>
+                  <select 
+                    value={formData.tipo}
+                    onChange={(e) => setFormData({...formData, tipo: e.target.value})}
+                    className="w-full px-3 py-2 bg-dark-300 border border-dark-300 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                    required
+                  >
                     <option value="">Selecione uma categoria</option>
                     <option value="CRM">CRM</option>
                     <option value="Anúncios">Anúncios</option>
@@ -144,25 +259,33 @@ const Campanhas = () => {
                   </select>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-300">Valor Mensal</label>
+                  <label className="text-sm font-medium text-gray-300">Valor Mensal *</label>
                   <input
                     type="number"
+                    step="0.01"
+                    value={formData.valorMensal}
+                    onChange={(e) => setFormData({...formData, valorMensal: e.target.value})}
                     className="w-full px-3 py-2 bg-dark-300 border border-dark-300 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-primary"
                     placeholder="0,00"
+                    required
                   />
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-gray-300">Status</label>
-                  <select className="w-full px-3 py-2 bg-dark-300 border border-dark-300 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-primary">
+                  <select 
+                    value={formData.status}
+                    onChange={(e) => setFormData({...formData, status: e.target.value})}
+                    className="w-full px-3 py-2 bg-dark-300 border border-dark-300 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                  >
                     <option value="A pagar">A pagar</option>
                     <option value="Pago">Pago</option>
                     <option value="Vencido">Vencido</option>
                   </select>
                 </div>
-                <Button className="w-full bg-primary hover:bg-primary/90">
-                  Salvar Ferramenta
+                <Button type="submit" className="w-full bg-primary hover:bg-primary/90">
+                  {editingFerramenta ? 'Atualizar Ferramenta' : 'Salvar Ferramenta'}
                 </Button>
-              </div>
+              </form>
             </DialogContent>
           </Dialog>
         </div>
@@ -170,25 +293,25 @@ const Campanhas = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
           <Card className="glass-card">
             <CardContent className="p-4">
-              <div className="text-2xl font-bold text-white">R$ 1.784</div>
+              <div className="text-2xl font-bold text-white">R$ {ferramentas.reduce((sum, f) => sum + f.valorMensal, 0)}</div>
               <p className="text-gray-400 text-sm">Total Mensal</p>
             </CardContent>
           </Card>
           <Card className="glass-card">
             <CardContent className="p-4">
-              <div className="text-2xl font-bold text-green-400">4</div>
+              <div className="text-2xl font-bold text-green-400">{ferramentas.filter(f => f.status === 'Pago').length}</div>
               <p className="text-gray-400 text-sm">Pagas</p>
             </CardContent>
           </Card>
           <Card className="glass-card">
             <CardContent className="p-4">
-              <div className="text-2xl font-bold text-yellow-400">2</div>
+              <div className="text-2xl font-bold text-yellow-400">{ferramentas.filter(f => f.status === 'A pagar').length}</div>
               <p className="text-gray-400 text-sm">A Pagar</p>
             </CardContent>
           </Card>
           <Card className="glass-card">
             <CardContent className="p-4">
-              <div className="text-2xl font-bold text-red-400">1</div>
+              <div className="text-2xl font-bold text-red-400">{ferramentas.filter(f => f.status === 'Vencido').length}</div>
               <p className="text-gray-400 text-sm">Vencidas</p>
             </CardContent>
           </Card>
@@ -206,6 +329,7 @@ const Campanhas = () => {
                   <TableHead className="text-gray-300">Tipo</TableHead>
                   <TableHead className="text-gray-300">Valor Mensal</TableHead>
                   <TableHead className="text-gray-300">Status de Pagamento</TableHead>
+                  <TableHead className="text-gray-300">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -219,6 +343,26 @@ const Campanhas = () => {
                     </TableCell>
                     <TableCell className="text-white">R$ {ferramenta.valorMensal}</TableCell>
                     <TableCell>{getStatusBadge(ferramenta.status)}</TableCell>
+                    <TableCell>
+                      <div className="flex space-x-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEdit(ferramenta)}
+                          className="text-primary hover:text-primary/80"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDelete(ferramenta.id)}
+                          className="text-red-400 hover:text-red-300"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -226,6 +370,14 @@ const Campanhas = () => {
           </CardContent>
         </Card>
       </div>
+
+      <ConfirmDialog
+        isOpen={deleteConfirm.isOpen}
+        onClose={() => setDeleteConfirm({ isOpen: false, id: null })}
+        onConfirm={confirmDelete}
+        title="Excluir Ferramenta"
+        description="Tem certeza que deseja excluir esta ferramenta? Esta ação não pode ser desfeita."
+      />
     </DashboardLayout>
   );
 };
