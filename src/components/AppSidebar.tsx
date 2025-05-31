@@ -7,6 +7,8 @@ import {
   FileText, 
   DollarSign, 
   Megaphone,
+  UserCheck,
+  Brain,
   LogOut 
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -37,6 +39,16 @@ const menuItems = [
     title: 'Ferramentas de Marketing',
     url: '/campanhas',
     icon: Megaphone,
+  },
+  {
+    title: 'CRM de Leads',
+    url: '/crm-leads',
+    icon: UserCheck,
+  },
+  {
+    title: 'Inteligência Financeira',
+    url: '/inteligencia-financeira',
+    icon: Brain,
   },
 ];
 
