@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -22,6 +21,7 @@ import { Badge } from '@/components/ui/badge';
 import { Plus, Send, CheckCircle, X, FileText, Edit, Trash2 } from 'lucide-react';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { useToast } from '@/hooks/use-toast';
+import { generatePropostaPDF } from '@/utils/pdfGenerator';
 
 const Orcamentos = () => {
   const [propostas, setPropostas] = useState([
@@ -179,7 +179,7 @@ const Orcamentos = () => {
   };
 
   const generatePDF = (proposta: any) => {
-    // Simulação de geração de PDF
+    generatePropostaPDF(proposta);
     toast({
       title: 'PDF Gerado',
       description: `PDF do orçamento para ${proposta.cliente} foi gerado com sucesso`,

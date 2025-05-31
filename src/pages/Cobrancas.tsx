@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -19,9 +18,10 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Plus, CheckCircle, Clock, AlertCircle, Edit, Trash2 } from 'lucide-react';
+import { Plus, CheckCircle, Clock, AlertCircle, Edit, Trash2, FileText } from 'lucide-react';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { useToast } from '@/hooks/use-toast';
+import { generateCobrancaPDF } from '@/utils/pdfGenerator';
 
 const Cobrancas = () => {
   const [receitas, setReceitas] = useState([
@@ -200,6 +200,15 @@ const Cobrancas = () => {
     }
   };
 
+  const generatePDF = (receita: any) => {
+    generateCobrancaPDF(receita);
+    toast({
+      title: 'PDF Gerado',
+      description: `PDF da cobrança para ${receita.cliente} foi gerado com sucesso`,
+      type: 'success'
+    });
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -341,6 +350,14 @@ const Cobrancas = () => {
                     </TableCell>
                     <TableCell>
                       <div className="flex space-x-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => generatePDF(receita)}
+                          className="text-blue-400 hover:text-blue-300"
+                        >
+                          <FileText className="w-4 h-4" />
+                        </Button>
                         <Button
                           variant="ghost"
                           size="sm"

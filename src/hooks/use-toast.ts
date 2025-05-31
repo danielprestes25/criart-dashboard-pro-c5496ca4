@@ -26,3 +26,9 @@ export function useToast() {
 
   return { toast, toasts }
 }
+
+// Export toast function directly for convenience
+export const toast = ({ title, description, type = 'info' }: { title: string; description?: string; type?: ToastType }) => {
+  // This is a convenience export, but the main functionality should use the hook
+  console.log(`Toast: ${title} - ${description} (${type})`)
+}
