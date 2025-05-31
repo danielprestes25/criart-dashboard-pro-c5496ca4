@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -6,13 +5,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { toast } from '@/hooks/use-toast';
+import { useToast } from '@/hooks/use-toast';
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { login, isAuthenticated } = useAuth();
+  const { toast } = useToast();
 
   if (isAuthenticated) {
     return <Navigate to="/dashboard" replace />;
@@ -28,19 +28,20 @@ export default function Login() {
         toast({
           title: "Login realizado com sucesso!",
           description: "Bem-vindo ao Painel Criart",
+          type: "success"
         });
       } else {
         toast({
           title: "Erro no login",
           description: "E-mail ou senha incorretos",
-          variant: "destructive",
+          type: "error"
         });
       }
     } catch (error) {
       toast({
         title: "Erro no login",
         description: "Ocorreu um erro inesperado",
-        variant: "destructive",
+        type: "error"
       });
     } finally {
       setIsLoading(false);
