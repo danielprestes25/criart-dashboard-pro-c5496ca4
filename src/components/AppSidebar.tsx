@@ -9,6 +9,7 @@ import {
   Megaphone,
   UserCheck,
   Brain,
+  User,
   LogOut 
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -21,8 +22,8 @@ const menuItems = [
     icon: LayoutDashboard,
   },
   {
-    title: 'Pagamentos Funcionários',
-    url: '/clientes',
+    title: 'Funcionários',
+    url: '/funcionarios',
     icon: Users,
   },
   {
@@ -46,9 +47,14 @@ const menuItems = [
     icon: UserCheck,
   },
   {
-    title: 'Inteligência Financeira',
+    title: 'IA Financeira',
     url: '/inteligencia-financeira',
     icon: Brain,
+  },
+  {
+    title: 'Perfil',
+    url: '/perfil',
+    icon: User,
   },
 ];
 
@@ -60,7 +66,7 @@ export function AppSidebar() {
     <div className="flex flex-col h-screen w-64 bg-dark-200 border-r border-dark-300">
       {/* Logo */}
       <div className="p-6 border-b border-dark-300">
-        <h1 className="text-2xl font-bold gradient-text">Financeiro Criart</h1>
+        <h1 className="text-2xl font-bold gradient-text">Painel Criart</h1>
       </div>
 
       {/* Navigation */}

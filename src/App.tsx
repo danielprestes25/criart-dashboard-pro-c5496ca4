@@ -7,12 +7,13 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
-import Clientes from "./pages/Clientes";
+import Funcionarios from "./pages/Funcionarios";
 import Cobrancas from "./pages/Cobrancas";
 import Orcamentos from "./pages/Orcamentos";
 import Campanhas from "./pages/Campanhas";
 import CrmLeads from "./pages/CrmLeads";
 import InteligenciaFinanceira from "./pages/InteligenciaFinanceira";
+import Perfil from "./pages/Perfil";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -27,12 +28,13 @@ const App = () => (
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/clientes" element={<Clientes />} />
+            <Route path="/funcionarios" element={<Funcionarios />} />
             <Route path="/cobrancas" element={<Cobrancas />} />
             <Route path="/orcamentos" element={<Orcamentos />} />
             <Route path="/campanhas" element={<Campanhas />} />
             <Route path="/crm-leads" element={<CrmLeads />} />
             <Route path="/inteligencia-financeira" element={<InteligenciaFinanceira />} />
+            <Route path="/perfil" element={<Perfil />} />
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
