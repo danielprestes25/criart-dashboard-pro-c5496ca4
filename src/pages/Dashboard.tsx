@@ -5,6 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DollarSign, TrendingUp, TrendingDown, Clock } from 'lucide-react';
 
 const Dashboard = () => {
+  console.log('Dashboard component is rendering');
+
   const stats = [
     {
       title: 'Total de Receitas no Mês',
@@ -32,6 +34,8 @@ const Dashboard = () => {
     },
   ];
 
+  console.log('Stats data:', stats);
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -41,45 +45,48 @@ const Dashboard = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {stats.map((stat, index) => (
-            <Card key={index} className="glass-card">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-gray-300">
-                  {stat.title}
-                </CardTitle>
-                <stat.icon className="h-4 w-4 text-primary" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-white">{stat.value}</div>
-                <p className="text-xs text-gray-400 mt-1">
-                  {stat.description}
-                </p>
-              </CardContent>
-            </Card>
-          ))}
+          {stats.map((stat, index) => {
+            console.log('Rendering stat card:', stat.title);
+            return (
+              <Card key={index} className="bg-gray-800 border-gray-700">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium text-gray-300">
+                    {stat.title}
+                  </CardTitle>
+                  <stat.icon className="h-4 w-4 text-blue-400" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-white">{stat.value}</div>
+                  <p className="text-xs text-gray-400 mt-1">
+                    {stat.description}
+                  </p>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card className="glass-card">
+          <Card className="bg-gray-800 border-gray-700">
             <CardHeader>
               <CardTitle className="text-white">Últimas Transações</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex items-center justify-between p-3 bg-dark-300/50 rounded-lg">
+              <div className="flex items-center justify-between p-3 bg-gray-700 rounded-lg">
                 <div>
                   <p className="text-white font-medium">Pagamento - João Silva</p>
                   <p className="text-gray-400 text-sm">Desenvolvedor</p>
                 </div>
                 <span className="text-red-400 font-medium">-R$ 3.500</span>
               </div>
-              <div className="flex items-center justify-between p-3 bg-dark-300/50 rounded-lg">
+              <div className="flex items-center justify-between p-3 bg-gray-700 rounded-lg">
                 <div>
                   <p className="text-white font-medium">Receita - Cliente ABC</p>
                   <p className="text-gray-400 text-sm">Projeto de site</p>
                 </div>
                 <span className="text-green-400 font-medium">+R$ 2.800</span>
               </div>
-              <div className="flex items-center justify-between p-3 bg-dark-300/50 rounded-lg">
+              <div className="flex items-center justify-between p-3 bg-gray-700 rounded-lg">
                 <div>
                   <p className="text-white font-medium">Ferramenta - RD Station</p>
                   <p className="text-gray-400 text-sm">Marketing</p>
@@ -89,26 +96,26 @@ const Dashboard = () => {
             </CardContent>
           </Card>
 
-          <Card className="glass-card">
+          <Card className="bg-gray-800 border-gray-700">
             <CardHeader>
               <CardTitle className="text-white">Próximos Vencimentos</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex items-center justify-between p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+              <div className="flex items-center justify-between p-3 bg-yellow-900 border border-yellow-600 rounded-lg">
                 <div>
                   <p className="text-white font-medium">Salário - Maria Santos</p>
                   <p className="text-gray-400 text-sm">Vence em 3 dias</p>
                 </div>
                 <span className="text-yellow-400 font-medium">R$ 2.800</span>
               </div>
-              <div className="flex items-center justify-between p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+              <div className="flex items-center justify-between p-3 bg-yellow-900 border border-yellow-600 rounded-lg">
                 <div>
                   <p className="text-white font-medium">Meta Ads</p>
                   <p className="text-gray-400 text-sm">Vence em 5 dias</p>
                 </div>
                 <span className="text-yellow-400 font-medium">R$ 500</span>
               </div>
-              <div className="flex items-center justify-between p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+              <div className="flex items-center justify-between p-3 bg-red-900 border border-red-600 rounded-lg">
                 <div>
                   <p className="text-white font-medium">Google Workspace</p>
                   <p className="text-gray-400 text-sm">Vencido há 2 dias</p>

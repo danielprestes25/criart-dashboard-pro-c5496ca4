@@ -12,12 +12,15 @@ interface DashboardLayoutProps {
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   const { isAuthenticated } = useAuth();
 
+  console.log('DashboardLayout rendering, isAuthenticated:', isAuthenticated);
+
   if (!isAuthenticated) {
+    console.log('Not authenticated, redirecting to login');
     return <Navigate to="/login" replace />;
   }
 
   return (
-    <div className="min-h-screen bg-dark-100 flex">
+    <div className="min-h-screen bg-gray-900 flex">
       <AppSidebar />
       <div className="flex-1 flex flex-col">
         <AppHeader />
