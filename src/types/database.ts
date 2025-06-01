@@ -15,10 +15,9 @@ export interface Revenue {
   id: number;
   description: string;
   amount: number;
-  client_name: string;
+  client: string;
   category: string;
   date: string;
-  status: 'pending' | 'received';
   created_at: string;
   updated_at: string;
 }
@@ -29,7 +28,7 @@ export interface Expense {
   amount: number;
   category: string;
   date: string;
-  status: 'pending' | 'paid';
+  supplier: string;
   created_at: string;
   updated_at: string;
 }
@@ -39,10 +38,10 @@ export interface Lead {
   name: string;
   email: string;
   phone?: string;
+  company?: string;
   source: string;
   notes?: string;
-  score: number;
-  status: 'novo' | 'contato_iniciado' | 'em_negociacao' | 'ganhou' | 'perdido';
+  status: 'new' | 'contacted' | 'qualified' | 'proposal' | 'won' | 'lost';
   created_at: string;
   updated_at: string;
 }
@@ -50,9 +49,11 @@ export interface Lead {
 export interface Budget {
   id: number;
   client_name: string;
-  description: string;
+  project_description: string;
   amount: number;
   status: 'draft' | 'sent' | 'approved' | 'rejected';
+  created_date: string;
+  valid_until: string;
   created_at: string;
   updated_at: string;
 }
@@ -65,6 +66,8 @@ export interface Campaign {
   start_date: string;
   end_date: string;
   status: 'active' | 'paused' | 'completed';
+  target_audience?: string;
+  objective?: string;
   created_at: string;
   updated_at: string;
 }
