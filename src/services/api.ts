@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { Employee, Revenue, Expense, Lead, Budget, Campaign, Cobranca } from '@/types/database';
 
@@ -268,30 +269,83 @@ class ApiService {
       .order('created_at', { ascending: false });
     
     if (error) throw error;
-    return (data || []) as Cobranca[];
+    
+    // Map the database response to our Cobranca interface
+    return (data || []).map((item: any) => ({
+      id: item.id,
+      cliente: item.cliente,
+      valor: item.valor,
+      status: item.status as 'Pago' | 'Pendente' | 'Vencido',
+      data: item.data,
+      linkPagamento: item.linkpagamento,
+      created_at: item.created_at,
+      updated_at: item.updated_at
+    }));
   }
 
   async createCobranca(cobranca: Omit<Cobranca, 'id' | 'created_at' | 'updated_at'>): Promise<Cobranca> {
+    // Map our interface to database column names
+    const dbData = {
+      cliente: cobranca.cliente,
+      valor: cobranca.valor,
+      status: cobranca.status,
+      data: cobranca.data,
+      linkpagamento: cobranca.linkPagamento
+    };
+
     const { data, error } = await supabase
       .from('cobrancas')
-      .insert(cobranca)
+      .insert(dbData)
       .select()
       .single();
     
     if (error) throw error;
-    return data as Cobranca;
+    
+    // Map response back to our interface
+    return {
+      id: data.id,
+      cliente: data.cliente,
+      valor: data.valor,
+      status: data.status as 'Pago' | 'Pendente' | 'Vencido',
+      data: data.data,
+      linkPagamento: data.linkpagamento,
+      created_at: data.created_at,
+      updated_at: data.updated_at
+    };
   }
 
   async updateCobranca(id: number, cobranca: Partial<Cobranca>): Promise<Cobranca> {
+    // Map our interface to database column names
+    const dbData: any = {
+      updated_at: new Date().toISOString()
+    };
+    
+    if (cobranca.cliente) dbData.cliente = cobranca.cliente;
+    if (cobranca.valor) dbData.valor = cobranca.valor;
+    if (cobranca.status) dbData.status = cobranca.status;
+    if (cobranca.data) dbData.data = cobranca.data;
+    if (cobranca.linkPagamento !== undefined) dbData.linkpagamento = cobranca.linkPagamento;
+
     const { data, error } = await supabase
       .from('cobrancas')
-      .update({ ...cobranca, updated_at: new Date().toISOString() })
+      .update(dbData)
       .eq('id', id)
       .select()
       .single();
     
     if (error) throw error;
-    return data as Cobranca;
+    
+    // Map response back to our interface
+    return {
+      id: data.id,
+      cliente: data.cliente,
+      valor: data.valor,
+      status: data.status as 'Pago' | 'Pendente' | 'Vencido',
+      data: data.data,
+      linkPagamento: data.linkpagamento,
+      created_at: data.created_at,
+      updated_at: data.updated_at
+    };
   }
 
   async deleteCobranca(id: number): Promise<void> {

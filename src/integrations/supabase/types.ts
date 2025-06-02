@@ -87,6 +87,39 @@ export type Database = {
         }
         Relationships: []
       }
+      cobrancas: {
+        Row: {
+          cliente: string
+          created_at: string | null
+          data: string
+          id: number
+          linkpagamento: string | null
+          status: string
+          updated_at: string | null
+          valor: number
+        }
+        Insert: {
+          cliente: string
+          created_at?: string | null
+          data: string
+          id?: number
+          linkpagamento?: string | null
+          status?: string
+          updated_at?: string | null
+          valor: number
+        }
+        Update: {
+          cliente?: string
+          created_at?: string | null
+          data?: string
+          id?: number
+          linkpagamento?: string | null
+          status?: string
+          updated_at?: string | null
+          valor?: number
+        }
+        Relationships: []
+      }
       employees: {
         Row: {
           created_at: string | null

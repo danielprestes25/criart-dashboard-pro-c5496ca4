@@ -58,7 +58,7 @@ const Cobrancas = () => {
       toast({
         title: 'Erro',
         description: 'Erro ao carregar cobranças',
-        variant: 'destructive'
+        type: 'error'
       });
     } finally {
       setLoading(false);
@@ -83,7 +83,7 @@ const Cobrancas = () => {
       toast({
         title: 'Erro',
         description: 'Preencha todos os campos obrigatórios',
-        variant: 'destructive'
+        type: 'error'
       });
       return;
     }
@@ -119,7 +119,7 @@ const Cobrancas = () => {
       toast({
         title: 'Erro',
         description: 'Erro ao salvar cobrança',
-        variant: 'destructive'
+        type: 'error'
       });
     }
   };
@@ -154,7 +154,7 @@ const Cobrancas = () => {
         toast({
           title: 'Erro',
           description: 'Erro ao excluir cobrança',
-          variant: 'destructive'
+          type: 'error'
         });
       }
     }
