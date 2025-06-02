@@ -11,7 +11,7 @@ class ApiService {
       .order('created_at', { ascending: false });
     
     if (error) throw error;
-    return data || [];
+    return (data || []) as Employee[];
   }
 
   async createEmployee(employee: Omit<Employee, 'id' | 'created_at' | 'updated_at'>): Promise<Employee> {
@@ -22,7 +22,7 @@ class ApiService {
       .single();
     
     if (error) throw error;
-    return data;
+    return data as Employee;
   }
 
   async updateEmployee(id: number, employee: Partial<Employee>): Promise<Employee> {
@@ -34,7 +34,7 @@ class ApiService {
       .single();
     
     if (error) throw error;
-    return data;
+    return data as Employee;
   }
 
   async deleteEmployee(id: number): Promise<void> {
@@ -54,7 +54,7 @@ class ApiService {
       .order('date', { ascending: false });
     
     if (error) throw error;
-    return data || [];
+    return (data || []) as Revenue[];
   }
 
   async createRevenue(revenue: Omit<Revenue, 'id' | 'created_at' | 'updated_at'>): Promise<Revenue> {
@@ -65,7 +65,7 @@ class ApiService {
       .single();
     
     if (error) throw error;
-    return data;
+    return data as Revenue;
   }
 
   async updateRevenue(id: number, revenue: Partial<Revenue>): Promise<Revenue> {
@@ -77,7 +77,7 @@ class ApiService {
       .single();
     
     if (error) throw error;
-    return data;
+    return data as Revenue;
   }
 
   async deleteRevenue(id: number): Promise<void> {
@@ -97,7 +97,7 @@ class ApiService {
       .order('date', { ascending: false });
     
     if (error) throw error;
-    return data || [];
+    return (data || []) as Expense[];
   }
 
   async createExpense(expense: Omit<Expense, 'id' | 'created_at' | 'updated_at'>): Promise<Expense> {
@@ -108,7 +108,7 @@ class ApiService {
       .single();
     
     if (error) throw error;
-    return data;
+    return data as Expense;
   }
 
   async updateExpense(id: number, expense: Partial<Expense>): Promise<Expense> {
@@ -120,7 +120,7 @@ class ApiService {
       .single();
     
     if (error) throw error;
-    return data;
+    return data as Expense;
   }
 
   async deleteExpense(id: number): Promise<void> {
@@ -140,7 +140,7 @@ class ApiService {
       .order('created_at', { ascending: false });
     
     if (error) throw error;
-    return data || [];
+    return (data || []) as Lead[];
   }
 
   async createLead(lead: Omit<Lead, 'id' | 'created_at' | 'updated_at'>): Promise<Lead> {
@@ -151,7 +151,7 @@ class ApiService {
       .single();
     
     if (error) throw error;
-    return data;
+    return data as Lead;
   }
 
   async updateLead(id: number, lead: Partial<Lead>): Promise<Lead> {
@@ -163,7 +163,7 @@ class ApiService {
       .single();
     
     if (error) throw error;
-    return data;
+    return data as Lead;
   }
 
   async deleteLead(id: number): Promise<void> {
@@ -183,7 +183,7 @@ class ApiService {
       .order('created_at', { ascending: false });
     
     if (error) throw error;
-    return data || [];
+    return (data || []) as Budget[];
   }
 
   async createBudget(budget: Omit<Budget, 'id' | 'created_at' | 'updated_at'>): Promise<Budget> {
@@ -194,7 +194,7 @@ class ApiService {
       .single();
     
     if (error) throw error;
-    return data;
+    return data as Budget;
   }
 
   async updateBudget(id: number, budget: Partial<Budget>): Promise<Budget> {
@@ -206,7 +206,7 @@ class ApiService {
       .single();
     
     if (error) throw error;
-    return data;
+    return data as Budget;
   }
 
   async deleteBudget(id: number): Promise<void> {
@@ -226,7 +226,7 @@ class ApiService {
       .order('created_at', { ascending: false });
     
     if (error) throw error;
-    return data || [];
+    return (data || []) as Campaign[];
   }
 
   async createCampaign(campaign: Omit<Campaign, 'id' | 'created_at' | 'updated_at'>): Promise<Campaign> {
@@ -237,7 +237,7 @@ class ApiService {
       .single();
     
     if (error) throw error;
-    return data;
+    return data as Campaign;
   }
 
   async updateCampaign(id: number, campaign: Partial<Campaign>): Promise<Campaign> {
@@ -249,7 +249,7 @@ class ApiService {
       .single();
     
     if (error) throw error;
-    return data;
+    return data as Campaign;
   }
 
   async deleteCampaign(id: number): Promise<void> {

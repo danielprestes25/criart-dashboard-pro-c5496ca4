@@ -42,6 +42,7 @@ export interface Lead {
   source: string;
   notes?: string;
   status: 'new' | 'contacted' | 'qualified' | 'proposal' | 'won' | 'lost';
+  score: number;
   created_at: string;
   updated_at: string;
 }

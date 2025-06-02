@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -25,11 +24,11 @@ const leadSources = [
 ];
 
 const statusColumns = [
-  { id: 'novo', title: 'Novo', color: 'bg-blue-500' },
-  { id: 'contato_iniciado', title: 'Contato Iniciado', color: 'bg-yellow-500' },
-  { id: 'em_negociacao', title: 'Em Negociação', color: 'bg-orange-500' },
-  { id: 'ganhou', title: 'Ganhou', color: 'bg-green-500' },
-  { id: 'perdido', title: 'Perdido', color: 'bg-red-500' }
+  { id: 'new', title: 'Novo', color: 'bg-blue-500' },
+  { id: 'contacted', title: 'Contato Iniciado', color: 'bg-yellow-500' },
+  { id: 'qualified', title: 'Em Negociação', color: 'bg-orange-500' },
+  { id: 'won', title: 'Ganhou', color: 'bg-green-500' },
+  { id: 'lost', title: 'Perdido', color: 'bg-red-500' }
 ];
 
 export default function CrmLeads() {
@@ -79,7 +78,7 @@ export default function CrmLeads() {
       } else {
         await apiService.createLead({
           ...formData,
-          status: 'novo'
+          status: 'new'
         });
         toast({
           title: "Lead criado!",
@@ -109,7 +108,7 @@ export default function CrmLeads() {
       phone: lead.phone || '',
       source: lead.source,
       notes: lead.notes || '',
-      score: lead.score
+      score: lead.score || 0
     });
     setIsModalOpen(true);
   };
@@ -294,8 +293,8 @@ export default function CrmLeads() {
                             <h4 className="font-medium text-white">{lead.name}</h4>
                             <p className="text-sm text-gray-400">{lead.email}</p>
                           </div>
-                          <span className={`text-sm font-medium ${getScoreColor(lead.score)}`}>
-                            {lead.score}
+                          <span className={`text-sm font-medium ${getScoreColor(lead.score || 0)}`}>
+                            {lead.score || 0}
                           </span>
                         </div>
                         
@@ -317,12 +316,12 @@ export default function CrmLeads() {
                           >
                             <Edit className="h-3 w-3" />
                           </Button>
-                          {column.id !== 'ganhou' && (
+                          {column.id !== 'won' && (
                             <Button
                               size="sm"
                               variant="ghost"
                               className="text-green-400 hover:text-green-300 hover:bg-green-400/10"
-                              onClick={() => handleStatusChange(lead.id, 'ganhou')}
+                              onClick={() => handleStatusChange(lead.id, 'won')}
                             >
                               <UserPlus className="h-3 w-3" />
                             </Button>
@@ -337,7 +336,7 @@ export default function CrmLeads() {
                           </Button>
                         </div>
                         
-                        {column.id !== 'ganhou' && column.id !== 'perdido' && (
+                        {column.id !== 'won' && column.id !== 'lost' && (
                           <Select onValueChange={(value) => handleStatusChange(lead.id, value)}>
                             <SelectTrigger className="bg-dark-300 border-dark-400 text-white text-xs">
                               <SelectValue placeholder="Mover para..." />
