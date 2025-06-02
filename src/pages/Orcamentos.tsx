@@ -56,7 +56,7 @@ const Orcamentos = () => {
       toast({
         title: 'Erro ao carregar orçamentos',
         description: 'Não foi possível carregar os orçamentos',
-        variant: 'destructive'
+        type: 'error'
       });
     } finally {
       setIsLoading(false);
@@ -81,7 +81,7 @@ const Orcamentos = () => {
       toast({
         title: 'Erro',
         description: 'Preencha todos os campos obrigatórios',
-        variant: 'destructive'
+        type: 'error'
       });
       return;
     }
@@ -121,7 +121,7 @@ const Orcamentos = () => {
       toast({
         title: 'Erro',
         description: 'Não foi possível salvar o orçamento',
-        variant: 'destructive'
+        type: 'error'
       });
     }
   };
@@ -155,7 +155,7 @@ const Orcamentos = () => {
         toast({
           title: 'Erro',
           description: 'Não foi possível excluir o orçamento',
-          variant: 'destructive'
+          type: 'error'
         });
       }
     }

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { Card, CardContent } from '@/components/ui/card';
@@ -9,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Edit, UserPlus, Trash2, DragHandleDots2Icon } from 'lucide-react';
+import { Plus, Edit, UserPlus, Trash2, GripVertical } from 'lucide-react';
 import { apiService } from '@/services/api';
 import { Lead } from '@/types/database';
 
@@ -62,7 +61,7 @@ export default function CrmLeads() {
       toast({
         title: "Erro ao carregar leads",
         description: "Não foi possível carregar os leads",
-        variant: "destructive"
+        type: "error"
       });
     } finally {
       setIsLoading(false);
@@ -97,7 +96,7 @@ export default function CrmLeads() {
       toast({
         title: "Erro ao salvar lead",
         description: "Não foi possível salvar o lead",
-        variant: "destructive"
+        type: "error"
       });
     }
   };
@@ -128,7 +127,7 @@ export default function CrmLeads() {
       toast({
         title: "Erro ao excluir lead",
         description: "Não foi possível excluir o lead",
-        variant: "destructive"
+        type: "error"
       });
     }
   };
@@ -145,7 +144,7 @@ export default function CrmLeads() {
       toast({
         title: "Erro ao atualizar status",
         description: "Não foi possível atualizar o status",
-        variant: "destructive"
+        type: "error"
       });
     }
   };
@@ -355,7 +354,7 @@ export default function CrmLeads() {
                               <span className={`text-xs font-medium px-2 py-1 rounded-full ${getScoreColor(lead.score || 0)}`}>
                                 {lead.score || 0}
                               </span>
-                              <DragHandleDots2Icon className="h-4 w-4 text-gray-500" />
+                              <GripVertical className="h-4 w-4 text-gray-500" />
                             </div>
                           </div>
                           

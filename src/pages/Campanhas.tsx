@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -69,7 +68,7 @@ const Campanhas = () => {
       toast({
         title: 'Erro ao carregar campanhas',
         description: 'Não foi possível carregar as campanhas',
-        variant: 'destructive'
+        type: 'error'
       });
     } finally {
       setIsLoading(false);
@@ -97,7 +96,7 @@ const Campanhas = () => {
       toast({
         title: 'Erro',
         description: 'Preencha todos os campos obrigatórios',
-        variant: 'destructive'
+        type: 'error'
       });
       return;
     }
@@ -142,7 +141,7 @@ const Campanhas = () => {
       toast({
         title: 'Erro',
         description: 'Não foi possível salvar a campanha',
-        variant: 'destructive'
+        type: 'error'
       });
     }
   };
@@ -179,7 +178,7 @@ const Campanhas = () => {
         toast({
           title: 'Erro',
           description: 'Não foi possível excluir a campanha',
-          variant: 'destructive'
+          type: 'error'
         });
       }
     }
@@ -199,7 +198,7 @@ const Campanhas = () => {
       toast({
         title: 'Erro',
         description: 'Não foi possível atualizar o status da campanha',
-        variant: 'destructive'
+        type: 'error'
       });
     }
   };
