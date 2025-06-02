@@ -10,7 +10,8 @@ import {
   UserCheck,
   Brain,
   User,
-  LogOut 
+  LogOut,
+  Palette
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -45,6 +46,11 @@ const menuItems = [
     title: 'CRM de Leads',
     url: '/crm-leads',
     icon: UserCheck,
+  },
+  {
+    title: 'Produção de Materiais',
+    url: '/producao-materiais',
+    icon: Palette,
   },
   {
     title: 'IA Financeira',
