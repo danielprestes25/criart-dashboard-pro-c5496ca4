@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -22,53 +23,14 @@ import { Plus, CheckCircle, Clock, AlertCircle, Edit, Trash2, FileText } from 'l
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { useToast } from '@/hooks/use-toast';
 import { generateCobrancaPDF } from '@/utils/pdfGenerator';
+import { apiService } from '@/services/api';
+import { Cobranca } from '@/types/database';
 
 const Cobrancas = () => {
-  const [receitas, setReceitas] = useState([
-    {
-      id: 1,
-      cliente: 'Empresa ABC Ltda',
-      valor: 2800,
-      status: 'Pago',
-      data: '2024-01-15',
-      linkPagamento: 'https://mercadopago.com/abc123'
-    },
-    {
-      id: 2,
-      cliente: 'Startup XYZ',
-      valor: 1500,
-      status: 'Pendente',
-      data: '2024-01-20',
-      linkPagamento: 'https://mercadopago.com/xyz456'
-    },
-    {
-      id: 3,
-      cliente: 'Loja Virtual 123',
-      valor: 3200,
-      status: 'Vencido',
-      data: '2024-01-10',
-      linkPagamento: 'https://mercadopago.com/lv789'
-    },
-    {
-      id: 4,
-      cliente: 'Consultoria Beta',
-      valor: 2100,
-      status: 'Pago',
-      data: '2024-01-18',
-      linkPagamento: 'https://mercadopago.com/cb101'
-    },
-    {
-      id: 5,
-      cliente: 'E-commerce Gama',
-      valor: 4500,
-      status: 'Pendente',
-      data: '2024-01-25',
-      linkPagamento: 'https://mercadopago.com/eg112'
-    }
-  ]);
-
+  const [receitas, setReceitas] = useState<Cobranca[]>([]);
+  const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingReceita, setEditingReceita] = useState<any>(null);
+  const [editingReceita, setEditingReceita] = useState<Cobranca | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; id: number | null }>({
     isOpen: false,
     id: null
@@ -78,9 +40,30 @@ const Cobrancas = () => {
     valor: '',
     dataVencimento: '',
     linkPagamento: '',
-    status: 'Pendente'
+    status: 'Pendente' as 'Pago' | 'Pendente' | 'Vencido'
   });
   const { toast } = useToast();
+
+  useEffect(() => {
+    loadCobrancas();
+  }, []);
+
+  const loadCobrancas = async () => {
+    try {
+      setLoading(true);
+      const data = await apiService.getCobrancas();
+      setReceitas(data);
+    } catch (error) {
+      console.error('Erro ao carregar cobranças:', error);
+      toast({
+        title: 'Erro',
+        description: 'Erro ao carregar cobranças',
+        variant: 'destructive'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const resetForm = () => {
     setFormData({
@@ -93,64 +76,61 @@ const Cobrancas = () => {
     setEditingReceita(null);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!formData.cliente || !formData.valor || !formData.dataVencimento) {
       toast({
         title: 'Erro',
         description: 'Preencha todos os campos obrigatórios',
-        type: 'error'
+        variant: 'destructive'
       });
       return;
     }
 
-    if (editingReceita) {
-      setReceitas(prev => prev.map(receita => 
-        receita.id === editingReceita.id 
-          ? {
-              ...receita,
-              cliente: formData.cliente,
-              valor: parseFloat(formData.valor),
-              data: formData.dataVencimento,
-              linkPagamento: formData.linkPagamento,
-              status: formData.status
-            }
-          : receita
-      ));
-      toast({
-        title: 'Sucesso',
-        description: 'Cobrança atualizada com sucesso',
-        type: 'success'
-      });
-    } else {
-      const newReceita = {
-        id: Math.max(...receitas.map(r => r.id)) + 1,
+    try {
+      const cobrancaData = {
         cliente: formData.cliente,
         valor: parseFloat(formData.valor),
-        status: formData.status,
         data: formData.dataVencimento,
-        linkPagamento: formData.linkPagamento
+        linkPagamento: formData.linkPagamento,
+        status: formData.status
       };
-      setReceitas(prev => [...prev, newReceita]);
+
+      if (editingReceita) {
+        await apiService.updateCobranca(editingReceita.id, cobrancaData);
+        toast({
+          title: 'Sucesso',
+          description: 'Cobrança atualizada com sucesso'
+        });
+      } else {
+        await apiService.createCobranca(cobrancaData);
+        toast({
+          title: 'Sucesso',
+          description: 'Cobrança criada com sucesso'
+        });
+      }
+
+      resetForm();
+      setIsDialogOpen(false);
+      loadCobrancas();
+    } catch (error) {
+      console.error('Erro ao salvar cobrança:', error);
       toast({
-        title: 'Sucesso',
-        description: 'Cobrança criada com sucesso',
-        type: 'success'
+        title: 'Erro',
+        description: 'Erro ao salvar cobrança',
+        variant: 'destructive'
       });
     }
-
-    resetForm();
-    setIsDialogOpen(false);
   };
 
-  const handleEdit = (receita: any) => {
+  const handleEdit = (receita: Cobranca) => {
     setEditingReceita(receita);
     setFormData({
       cliente: receita.cliente,
       valor: receita.valor.toString(),
       dataVencimento: receita.data,
-      linkPagamento: receita.linkPagamento,
+      linkPagamento: receita.linkPagamento || '',
       status: receita.status
     });
     setIsDialogOpen(true);
@@ -160,14 +140,23 @@ const Cobrancas = () => {
     setDeleteConfirm({ isOpen: true, id });
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (deleteConfirm.id) {
-      setReceitas(prev => prev.filter(receita => receita.id !== deleteConfirm.id));
-      toast({
-        title: 'Sucesso',
-        description: 'Cobrança excluída com sucesso',
-        type: 'success'
-      });
+      try {
+        await apiService.deleteCobranca(deleteConfirm.id);
+        toast({
+          title: 'Sucesso',
+          description: 'Cobrança excluída com sucesso'
+        });
+        loadCobrancas();
+      } catch (error) {
+        console.error('Erro ao excluir cobrança:', error);
+        toast({
+          title: 'Erro',
+          description: 'Erro ao excluir cobrança',
+          variant: 'destructive'
+        });
+      }
     }
     setDeleteConfirm({ isOpen: false, id: null });
   };
@@ -200,14 +189,23 @@ const Cobrancas = () => {
     }
   };
 
-  const generatePDF = (receita: any) => {
+  const generatePDF = (receita: Cobranca) => {
     generateCobrancaPDF(receita);
     toast({
       title: 'PDF Gerado',
-      description: `PDF da cobrança para ${receita.cliente} foi gerado com sucesso`,
-      type: 'success'
+      description: `PDF da cobrança para ${receita.cliente} foi gerado com sucesso`
     });
   };
+
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-white">Carregando...</div>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
@@ -281,7 +279,7 @@ const Cobrancas = () => {
                   <label className="text-sm font-medium text-gray-300">Status</label>
                   <select 
                     value={formData.status}
-                    onChange={(e) => setFormData({...formData, status: e.target.value})}
+                    onChange={(e) => setFormData({...formData, status: e.target.value as 'Pago' | 'Pendente' | 'Vencido'})}
                     className="w-full px-3 py-2 bg-dark-300 border border-dark-300 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-primary"
                   >
                     <option value="Pendente">Pendente</option>

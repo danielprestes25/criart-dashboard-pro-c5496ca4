@@ -1,4 +1,3 @@
-
 export interface Employee {
   id: number;
   name: string;
@@ -69,6 +68,17 @@ export interface Campaign {
   status: 'active' | 'paused' | 'completed';
   target_audience?: string;
   objective?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Cobranca {
+  id: number;
+  cliente: string;
+  valor: number;
+  status: 'Pago' | 'Pendente' | 'Vencido';
+  data: string;
+  linkPagamento?: string;
   created_at: string;
   updated_at: string;
 }

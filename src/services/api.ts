@@ -1,6 +1,5 @@
-
 import { supabase } from '@/integrations/supabase/client';
-import { Employee, Revenue, Expense, Lead, Budget, Campaign } from '@/types/database';
+import { Employee, Revenue, Expense, Lead, Budget, Campaign, Cobranca } from '@/types/database';
 
 class ApiService {
   // Employees
@@ -255,6 +254,49 @@ class ApiService {
   async deleteCampaign(id: number): Promise<void> {
     const { error } = await supabase
       .from('campaigns')
+      .delete()
+      .eq('id', id);
+    
+    if (error) throw error;
+  }
+
+  // Cobranças
+  async getCobrancas(): Promise<Cobranca[]> {
+    const { data, error } = await supabase
+      .from('cobrancas')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    if (error) throw error;
+    return (data || []) as Cobranca[];
+  }
+
+  async createCobranca(cobranca: Omit<Cobranca, 'id' | 'created_at' | 'updated_at'>): Promise<Cobranca> {
+    const { data, error } = await supabase
+      .from('cobrancas')
+      .insert(cobranca)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data as Cobranca;
+  }
+
+  async updateCobranca(id: number, cobranca: Partial<Cobranca>): Promise<Cobranca> {
+    const { data, error } = await supabase
+      .from('cobrancas')
+      .update({ ...cobranca, updated_at: new Date().toISOString() })
+      .eq('id', id)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data as Cobranca;
+  }
+
+  async deleteCobranca(id: number): Promise<void> {
+    const { error } = await supabase
+      .from('cobrancas')
       .delete()
       .eq('id', id);
     
