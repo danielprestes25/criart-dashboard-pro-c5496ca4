@@ -13,6 +13,7 @@ import Orcamentos from "./pages/Orcamentos";
 import Campanhas from "./pages/Campanhas";
 import CrmLeads from "./pages/CrmLeads";
 import InteligenciaFinanceira from "./pages/InteligenciaFinanceira";
+import ProducaoMateriais from "./pages/ProducaoMateriais";
 import Perfil from "./pages/Perfil";
 import NotFound from "./pages/NotFound";
 
@@ -34,6 +35,7 @@ const App = () => (
             <Route path="/campanhas" element={<Campanhas />} />
             <Route path="/crm-leads" element={<CrmLeads />} />
             <Route path="/inteligencia-financeira" element={<InteligenciaFinanceira />} />
+            <Route path="/producao-materiais" element={<ProducaoMateriais />} />
             <Route path="/perfil" element={<Perfil />} />
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
             <Route path="*" element={<NotFound />} />
