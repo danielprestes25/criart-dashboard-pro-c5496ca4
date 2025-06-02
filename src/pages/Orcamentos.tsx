@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -22,142 +23,117 @@ import { Plus, Send, CheckCircle, X, FileText, Edit, Trash2 } from 'lucide-react
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { useToast } from '@/hooks/use-toast';
 import { generatePropostaPDF } from '@/utils/pdfGenerator';
+import { apiService } from '@/services/api';
+import { Budget } from '@/types/database';
 
 const Orcamentos = () => {
-  const [propostas, setPropostas] = useState([
-    {
-      id: 1,
-      cliente: 'Tech Solutions',
-      valorProposto: 5800,
-      status: 'Aceito',
-      dataEnvio: '2024-01-12',
-      descricao: 'Desenvolvimento de site corporativo',
-      validade: '2024-02-12'
-    },
-    {
-      id: 2,
-      cliente: 'Marketing Digital Pro',
-      valorProposto: 3200,
-      status: 'Enviado',
-      dataEnvio: '2024-01-18',
-      descricao: 'Campanha de mídia social',
-      validade: '2024-02-18'
-    },
-    {
-      id: 3,
-      cliente: 'Startup Innovation',
-      valorProposto: 2100,
-      status: 'Recusado',
-      dataEnvio: '2024-01-08',
-      descricao: 'Identidade visual completa',
-      validade: '2024-02-08'
-    },
-    {
-      id: 4,
-      cliente: 'E-commerce Plus',
-      valorProposto: 4500,
-      status: 'Enviado',
-      dataEnvio: '2024-01-20',
-      descricao: 'Plataforma de vendas online',
-      validade: '2024-02-20'
-    },
-    {
-      id: 5,
-      cliente: 'Consultoria Beta',
-      valorProposto: 6800,
-      status: 'Aceito',
-      dataEnvio: '2024-01-15',
-      descricao: 'Sistema de gestão interno',
-      validade: '2024-02-15'
-    }
-  ]);
-
+  const [propostas, setPropostas] = useState<Budget[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingProposta, setEditingProposta] = useState<any>(null);
+  const [editingProposta, setEditingProposta] = useState<Budget | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; id: number | null }>({
     isOpen: false,
     id: null
   });
   const [formData, setFormData] = useState({
-    cliente: '',
-    valorProposto: '',
-    descricao: '',
-    validade: '',
-    status: 'Enviado'
+    client_name: '',
+    amount: '',
+    project_description: '',
+    valid_until: '',
+    status: 'draft' as 'draft' | 'sent' | 'approved' | 'rejected'
   });
   const { toast } = useToast();
 
+  useEffect(() => {
+    loadPropostas();
+  }, []);
+
+  const loadPropostas = async () => {
+    try {
+      const data = await apiService.getBudgets();
+      setPropostas(data);
+    } catch (error) {
+      toast({
+        title: 'Erro ao carregar orçamentos',
+        description: 'Não foi possível carregar os orçamentos',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const resetForm = () => {
     setFormData({
-      cliente: '',
-      valorProposto: '',
-      descricao: '',
-      validade: '',
-      status: 'Enviado'
+      client_name: '',
+      amount: '',
+      project_description: '',
+      valid_until: '',
+      status: 'draft'
     });
     setEditingProposta(null);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.cliente || !formData.valorProposto || !formData.descricao || !formData.validade) {
+    if (!formData.client_name || !formData.amount || !formData.project_description || !formData.valid_until) {
       toast({
         title: 'Erro',
         description: 'Preencha todos os campos obrigatórios',
-        type: 'error'
+        variant: 'destructive'
       });
       return;
     }
 
-    if (editingProposta) {
-      setPropostas(prev => prev.map(proposta => 
-        proposta.id === editingProposta.id 
-          ? {
-              ...proposta,
-              cliente: formData.cliente,
-              valorProposto: parseFloat(formData.valorProposto),
-              descricao: formData.descricao,
-              validade: formData.validade,
-              status: formData.status
-            }
-          : proposta
-      ));
+    try {
+      if (editingProposta) {
+        await apiService.updateBudget(editingProposta.id, {
+          client_name: formData.client_name,
+          amount: parseFloat(formData.amount),
+          project_description: formData.project_description,
+          valid_until: formData.valid_until,
+          status: formData.status
+        });
+        toast({
+          title: 'Sucesso',
+          description: 'Orçamento atualizado com sucesso'
+        });
+      } else {
+        await apiService.createBudget({
+          client_name: formData.client_name,
+          amount: parseFloat(formData.amount),
+          project_description: formData.project_description,
+          valid_until: formData.valid_until,
+          created_date: new Date().toISOString().split('T')[0],
+          status: formData.status
+        });
+        toast({
+          title: 'Sucesso',
+          description: 'Orçamento criado com sucesso'
+        });
+      }
+
+      resetForm();
+      setIsDialogOpen(false);
+      loadPropostas();
+    } catch (error) {
       toast({
-        title: 'Sucesso',
-        description: 'Orçamento atualizado com sucesso',
-        type: 'success'
-      });
-    } else {
-      const newProposta = {
-        id: Math.max(...propostas.map(p => p.id)) + 1,
-        cliente: formData.cliente,
-        valorProposto: parseFloat(formData.valorProposto),
-        status: formData.status,
-        dataEnvio: new Date().toISOString().split('T')[0],
-        descricao: formData.descricao,
-        validade: formData.validade
-      };
-      setPropostas(prev => [...prev, newProposta]);
-      toast({
-        title: 'Sucesso',
-        description: 'Orçamento criado com sucesso',
-        type: 'success'
+        title: 'Erro',
+        description: 'Não foi possível salvar o orçamento',
+        variant: 'destructive'
       });
     }
-
-    resetForm();
-    setIsDialogOpen(false);
   };
 
-  const handleEdit = (proposta: any) => {
+  const handleEdit = (proposta: Budget) => {
     setEditingProposta(proposta);
     setFormData({
-      cliente: proposta.cliente,
-      valorProposto: proposta.valorProposto.toString(),
-      descricao: proposta.descricao,
-      validade: proposta.validade,
-      status: proposta.status
+      client_name: proposta.client_name,
+      amount: proposta.amount.toString(),
+      project_description: proposta.project_description,
+      valid_until: proposta.valid_until,
+      status: proposta.status as 'draft' | 'sent' | 'approved' | 'rejected'
     });
     setIsDialogOpen(true);
   };
@@ -166,54 +142,81 @@ const Orcamentos = () => {
     setDeleteConfirm({ isOpen: true, id });
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (deleteConfirm.id) {
-      setPropostas(prev => prev.filter(proposta => proposta.id !== deleteConfirm.id));
-      toast({
-        title: 'Sucesso',
-        description: 'Orçamento excluído com sucesso',
-        type: 'success'
-      });
+      try {
+        await apiService.deleteBudget(deleteConfirm.id);
+        toast({
+          title: 'Sucesso',
+          description: 'Orçamento excluído com sucesso'
+        });
+        loadPropostas();
+      } catch (error) {
+        toast({
+          title: 'Erro',
+          description: 'Não foi possível excluir o orçamento',
+          variant: 'destructive'
+        });
+      }
     }
     setDeleteConfirm({ isOpen: false, id: null });
   };
 
-  const generatePDF = (proposta: any) => {
-    generatePropostaPDF(proposta);
+  const generatePDF = (proposta: Budget) => {
+    generatePropostaPDF({
+      id: proposta.id,
+      cliente: proposta.client_name,
+      valorProposto: proposta.amount,
+      status: proposta.status,
+      dataEnvio: proposta.created_date,
+      descricao: proposta.project_description,
+      validade: proposta.valid_until
+    });
     toast({
       title: 'PDF Gerado',
-      description: `PDF do orçamento para ${proposta.cliente} foi gerado com sucesso`,
-      type: 'success'
+      description: `PDF do orçamento para ${proposta.client_name} foi gerado com sucesso`
     });
   };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'Aceito':
+      case 'approved':
         return (
           <Badge className="bg-green-500/20 text-green-400 border-green-500/30">
             <CheckCircle className="w-3 h-3 mr-1" />
-            Aceito
+            Aprovado
           </Badge>
         );
-      case 'Enviado':
+      case 'sent':
         return (
           <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30">
             <Send className="w-3 h-3 mr-1" />
             Enviado
           </Badge>
         );
-      case 'Recusado':
+      case 'rejected':
         return (
           <Badge className="bg-red-500/20 text-red-400 border-red-500/30">
             <X className="w-3 h-3 mr-1" />
-            Recusado
+            Rejeitado
           </Badge>
         );
       default:
-        return null;
+        return (
+          <Badge className="bg-gray-500/20 text-gray-400 border-gray-500/30">
+            Rascunho
+          </Badge>
+        );
     }
   };
+
+  if (isLoading) {
+    return (
+      <DashboardLayout>
+        <div className="text-center text-gray-400">Carregando orçamentos...</div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
@@ -245,8 +248,8 @@ const Orcamentos = () => {
                     <label className="text-sm font-medium text-gray-300">Cliente *</label>
                     <input
                       type="text"
-                      value={formData.cliente}
-                      onChange={(e) => setFormData({...formData, cliente: e.target.value})}
+                      value={formData.client_name}
+                      onChange={(e) => setFormData({...formData, client_name: e.target.value})}
                       className="w-full px-3 py-2 bg-dark-300 border border-dark-300 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-primary"
                       placeholder="Nome do cliente"
                       required
@@ -257,8 +260,8 @@ const Orcamentos = () => {
                     <input
                       type="number"
                       step="0.01"
-                      value={formData.valorProposto}
-                      onChange={(e) => setFormData({...formData, valorProposto: e.target.value})}
+                      value={formData.amount}
+                      onChange={(e) => setFormData({...formData, amount: e.target.value})}
                       className="w-full px-3 py-2 bg-dark-300 border border-dark-300 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-primary"
                       placeholder="0,00"
                       required
@@ -266,13 +269,13 @@ const Orcamentos = () => {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-300">Descrição do Serviço *</label>
+                  <label className="text-sm font-medium text-gray-300">Descrição do Projeto *</label>
                   <textarea
                     rows={4}
-                    value={formData.descricao}
-                    onChange={(e) => setFormData({...formData, descricao: e.target.value})}
+                    value={formData.project_description}
+                    onChange={(e) => setFormData({...formData, project_description: e.target.value})}
                     className="w-full px-3 py-2 bg-dark-300 border border-dark-300 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-primary"
-                    placeholder="Descreva detalhadamente o serviço a ser prestado..."
+                    placeholder="Descreva detalhadamente o projeto..."
                     required
                   />
                 </div>
@@ -281,8 +284,8 @@ const Orcamentos = () => {
                     <label className="text-sm font-medium text-gray-300">Validade da Proposta *</label>
                     <input
                       type="date"
-                      value={formData.validade}
-                      onChange={(e) => setFormData({...formData, validade: e.target.value})}
+                      value={formData.valid_until}
+                      onChange={(e) => setFormData({...formData, valid_until: e.target.value})}
                       className="w-full px-3 py-2 bg-dark-300 border border-dark-300 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-primary"
                       required
                     />
@@ -291,12 +294,13 @@ const Orcamentos = () => {
                     <label className="text-sm font-medium text-gray-300">Status</label>
                     <select 
                       value={formData.status}
-                      onChange={(e) => setFormData({...formData, status: e.target.value})}
+                      onChange={(e) => setFormData({...formData, status: e.target.value as 'draft' | 'sent' | 'approved' | 'rejected'})}
                       className="w-full px-3 py-2 bg-dark-300 border border-dark-300 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-primary"
                     >
-                      <option value="Enviado">Enviado</option>
-                      <option value="Aceito">Aceito</option>
-                      <option value="Recusado">Recusado</option>
+                      <option value="draft">Rascunho</option>
+                      <option value="sent">Enviado</option>
+                      <option value="approved">Aprovado</option>
+                      <option value="rejected">Rejeitado</option>
                     </select>
                   </div>
                 </div>
@@ -313,26 +317,26 @@ const Orcamentos = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
           <Card className="glass-card">
             <CardContent className="p-4">
-              <div className="text-2xl font-bold text-white">R$ {propostas.reduce((sum, p) => sum + p.valorProposto, 0).toLocaleString()}</div>
+              <div className="text-2xl font-bold text-white">R$ {propostas.reduce((sum, p) => sum + p.amount, 0).toLocaleString()}</div>
               <p className="text-gray-400 text-sm">Valor Total Propostas</p>
             </CardContent>
           </Card>
           <Card className="glass-card">
             <CardContent className="p-4">
-              <div className="text-2xl font-bold text-green-400">{propostas.filter(p => p.status === 'Aceito').length}</div>
-              <p className="text-gray-400 text-sm">Aceitas</p>
+              <div className="text-2xl font-bold text-green-400">{propostas.filter(p => p.status === 'approved').length}</div>
+              <p className="text-gray-400 text-sm">Aprovadas</p>
             </CardContent>
           </Card>
           <Card className="glass-card">
             <CardContent className="p-4">
-              <div className="text-2xl font-bold text-blue-400">{propostas.filter(p => p.status === 'Enviado').length}</div>
+              <div className="text-2xl font-bold text-blue-400">{propostas.filter(p => p.status === 'sent').length}</div>
               <p className="text-gray-400 text-sm">Enviadas</p>
             </CardContent>
           </Card>
           <Card className="glass-card">
             <CardContent className="p-4">
-              <div className="text-2xl font-bold text-red-400">{propostas.filter(p => p.status === 'Recusado').length}</div>
-              <p className="text-gray-400 text-sm">Recusadas</p>
+              <div className="text-2xl font-bold text-red-400">{propostas.filter(p => p.status === 'rejected').length}</div>
+              <p className="text-gray-400 text-sm">Rejeitadas</p>
             </CardContent>
           </Card>
         </div>
@@ -348,18 +352,18 @@ const Orcamentos = () => {
                   <TableHead className="text-gray-300">Cliente</TableHead>
                   <TableHead className="text-gray-300">Valor Proposto</TableHead>
                   <TableHead className="text-gray-300">Status</TableHead>
-                  <TableHead className="text-gray-300">Data de Envio</TableHead>
+                  <TableHead className="text-gray-300">Data de Criação</TableHead>
                   <TableHead className="text-gray-300">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {propostas.map((proposta) => (
                   <TableRow key={proposta.id} className="border-dark-300 hover:bg-dark-300/50">
-                    <TableCell className="text-white font-medium">{proposta.cliente}</TableCell>
-                    <TableCell className="text-white">R$ {proposta.valorProposto.toLocaleString()}</TableCell>
+                    <TableCell className="text-white font-medium">{proposta.client_name}</TableCell>
+                    <TableCell className="text-white">R$ {proposta.amount.toLocaleString()}</TableCell>
                     <TableCell>{getStatusBadge(proposta.status)}</TableCell>
                     <TableCell className="text-gray-300">
-                      {new Date(proposta.dataEnvio).toLocaleDateString('pt-BR')}
+                      {new Date(proposta.created_date).toLocaleDateString('pt-BR')}
                     </TableCell>
                     <TableCell>
                       <div className="flex space-x-2">
