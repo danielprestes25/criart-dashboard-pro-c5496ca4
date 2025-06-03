@@ -1,26 +1,19 @@
-
 import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { LogOut, User } from 'lucide-react';
 import { PasswordChangeModal } from './PasswordChangeModal';
-
 export function AppHeader() {
-  const { user, logout } = useAuth();
-
+  const {
+    user,
+    logout
+  } = useAuth();
   if (!user) return null;
-
-  return (
-    <header className="h-16 bg-dark-200 border-b border-dark-300 flex items-center justify-between px-6">
+  return <header className="h-16 bg-dark-200 border-b border-dark-300 flex items-center justify-between px-6">
       <div className="flex items-center space-x-4">
-        <h2 className="text-lg font-semibold text-white">Painel Financeiro Central</h2>
+        <h2 className="text-lg font-semibold text-white"></h2>
       </div>
 
       <div className="flex items-center space-x-4">
@@ -43,16 +36,12 @@ export function AppHeader() {
                 <p className="text-xs text-gray-400">{user.email}</p>
               </div>
             </div>
-            <DropdownMenuItem 
-              className="text-gray-300 hover:text-white hover:bg-dark-300 cursor-pointer"
-              onClick={logout}
-            >
+            <DropdownMenuItem className="text-gray-300 hover:text-white hover:bg-dark-300 cursor-pointer" onClick={logout}>
               <LogOut className="mr-2 h-4 w-4" />
               Sair
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
-    </header>
-  );
+    </header>;
 }
