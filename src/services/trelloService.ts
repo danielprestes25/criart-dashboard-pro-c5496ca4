@@ -120,19 +120,36 @@ class TrelloService {
 
   async connectToTrello(key: string, token: string, boardId: string) {
     try {
-      console.log('TrelloService: Conectando ao Trello...', { key: key.substring(0, 8) + '...', boardId });
+      console.log('TrelloService: Conectando ao Trello...', { 
+        key: key.substring(0, 8) + '...', 
+        boardId: boardId.substring(0, 8) + '...',
+        token: token.substring(0, 8) + '...'
+      });
+      
+      // Limpar o boardId removendo possível texto extra
+      const cleanBoardId = boardId.split('/')[0].trim();
+      console.log('TrelloService: Board ID limpo:', cleanBoardId);
+      
+      // Validar formato do boardId (deve ter cerca de 24 caracteres alfanuméricos)
+      if (!/^[a-zA-Z0-9]{20,}$/.test(cleanBoardId)) {
+        throw new Error('Board ID deve conter apenas letras e números (24+ caracteres)');
+      }
       
       // Validar credenciais fazendo uma chamada de teste
       const testResponse = await fetch(
-        `${this.baseUrl}/boards/${boardId}?key=${key}&token=${token}`
+        `${this.baseUrl}/boards/${cleanBoardId}?key=${key}&token=${token}`
       );
       
+      console.log('TrelloService: Response status:', testResponse.status);
+      
       if (!testResponse.ok) {
-        throw new Error('Credenciais inválidas ou board não encontrado');
+        const errorText = await testResponse.text();
+        console.log('TrelloService: Error response:', errorText);
+        throw new Error('Credenciais inválidas ou board não encontrado. Verifique a API Key, Token e Board ID.');
       }
       
       // Se chegou até aqui, as credenciais são válidas
-      this.credentials = { key, token, boardId };
+      this.credentials = { key, token, boardId: cleanBoardId };
       
       // Salvar no localStorage para persistir entre sessões
       localStorage.setItem('trello_credentials', JSON.stringify(this.credentials));
@@ -156,6 +173,18 @@ class TrelloService {
     } catch (error) {
       console.error('TrelloService: Erro ao carregar credenciais:', error);
     }
+  }
+
+  // Método para limpar credenciais
+  clearCredentials() {
+    this.credentials = {};
+    localStorage.removeItem('trello_credentials');
+    console.log('TrelloService: Credenciais removidas');
+  }
+
+  // Verificar se está conectado
+  isConnected() {
+    return !!(this.credentials.key && this.credentials.token && this.credentials.boardId);
   }
 }
 
