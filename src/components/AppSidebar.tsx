@@ -72,7 +72,14 @@ export function AppSidebar() {
     <div className="flex flex-col h-screen w-64 bg-dark-200 border-r border-dark-300">
       {/* Logo */}
       <div className="p-6 border-b border-dark-300">
-        <h1 className="text-2xl font-bold gradient-text">Painel Criart</h1>
+        <div className="flex items-center space-x-3">
+          <img 
+            src="/lovable-uploads/ef34442c-50fc-4535-a0f2-97651b6dacb6.png" 
+            alt="Criart Logo" 
+            className="h-8 w-auto"
+          />
+          <h1 className="text-xl font-bold gradient-text">Criart</h1>
+        </div>
       </div>
 
       {/* Navigation */}
