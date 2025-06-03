@@ -1,17 +1,25 @@
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { User, Session } from '@supabase/supabase-js';
 
-interface User {
+interface UserProfile {
   id: string;
   name: string;
   email: string;
+  avatar_url?: string;
 }
 
 interface AuthContextType {
-  user: User | null;
-  login: (email: string, password: string) => Promise<boolean>;
-  logout: () => void;
+  user: UserProfile | null;
+  session: Session | null;
+  login: (email: string, password: string) => Promise<{ error?: string }>;
+  signup: (email: string, password: string, name: string) => Promise<{ error?: string }>;
+  logout: () => Promise<void>;
+  updateProfile: (updates: Partial<UserProfile>) => Promise<{ error?: string }>;
+  updatePassword: (currentPassword: string, newPassword: string) => Promise<{ error?: string }>;
   isAuthenticated: boolean;
+  loading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -29,40 +37,165 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<UserProfile | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const login = async (email: string, password: string): Promise<boolean> => {
-    // Simular autenticação
-    if (email === 'admin@criart.com' && password === '123456') {
-      const userData = {
-        id: '1',
-        name: 'João Silva',
-        email: 'admin@criart.com'
-      };
-      setUser(userData);
-      localStorage.setItem('user', JSON.stringify(userData));
-      return true;
-    }
-    return false;
-  };
+  useEffect(() => {
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log('Auth state change:', event, session);
+        setSession(session);
+        
+        if (session?.user) {
+          // Fetch user profile
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
+          
+          if (profile) {
+            setUser({
+              id: profile.id,
+              name: profile.name,
+              email: session.user.email || '',
+              avatar_url: profile.avatar_url
+            });
+          }
+        } else {
+          setUser(null);
+        }
+        setLoading(false);
+      }
+    );
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('user');
-  };
+    // Check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      if (session?.user) {
+        supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single()
+          .then(({ data: profile }) => {
+            if (profile) {
+              setUser({
+                id: profile.id,
+                name: profile.name,
+                email: session.user.email || '',
+                avatar_url: profile.avatar_url
+              });
+            }
+            setLoading(false);
+          });
+      } else {
+        setLoading(false);
+      }
+    });
 
-  React.useEffect(() => {
-    const savedUser = localStorage.getItem('user');
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
-    }
+    return () => subscription.unsubscribe();
   }, []);
+
+  const signup = async (email: string, password: string, name: string) => {
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: { name },
+          emailRedirectTo: `${window.location.origin}/dashboard`
+        }
+      });
+
+      if (error) {
+        return { error: error.message };
+      }
+
+      return {};
+    } catch (error) {
+      return { error: 'Erro inesperado ao criar conta' };
+    }
+  };
+
+  const login = async (email: string, password: string) => {
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      if (error) {
+        return { error: error.message };
+      }
+
+      return {};
+    } catch (error) {
+      return { error: 'Erro inesperado ao fazer login' };
+    }
+  };
+
+  const logout = async () => {
+    await supabase.auth.signOut();
+  };
+
+  const updateProfile = async (updates: Partial<UserProfile>) => {
+    try {
+      if (!session?.user) {
+        return { error: 'Usuário não autenticado' };
+      }
+
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          name: updates.name,
+          avatar_url: updates.avatar_url
+        })
+        .eq('id', session.user.id);
+
+      if (error) {
+        return { error: error.message };
+      }
+
+      // Update local state
+      if (user) {
+        setUser({ ...user, ...updates });
+      }
+
+      return {};
+    } catch (error) {
+      return { error: 'Erro ao atualizar perfil' };
+    }
+  };
+
+  const updatePassword = async (currentPassword: string, newPassword: string) => {
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword
+      });
+
+      if (error) {
+        return { error: error.message };
+      }
+
+      return {};
+    } catch (error) {
+      return { error: 'Erro ao alterar senha' };
+    }
+  };
 
   const value = {
     user,
+    session,
     login,
+    signup,
     logout,
-    isAuthenticated: !!user,
+    updateProfile,
+    updatePassword,
+    isAuthenticated: !!session,
+    loading,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

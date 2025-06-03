@@ -356,28 +356,6 @@ class ApiService {
     
     if (error) throw error;
   }
-
-  // Financial AI Analysis
-  async getFinancialAnalysis(): Promise<any> {
-    try {
-      const [employees, revenues, expenses, budgets] = await Promise.all([
-        this.getEmployees(),
-        this.getRevenues(),
-        this.getExpenses(),
-        this.getBudgets()
-      ]);
-
-      const { data, error } = await supabase.functions.invoke('financial-ai-analysis', {
-        body: { employees, revenues, expenses, budgets }
-      });
-
-      if (error) throw error;
-      return data;
-    } catch (error) {
-      console.error('Financial AI Analysis Error:', error);
-      throw error;
-    }
-  }
 }
 
 export const apiService = new ApiService();

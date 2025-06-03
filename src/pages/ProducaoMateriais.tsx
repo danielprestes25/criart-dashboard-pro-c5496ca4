@@ -4,7 +4,7 @@ import { DashboardLayout } from '@/components/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { RefreshCw, Calendar, User, ExternalLink, Trash2, Edit } from 'lucide-react';
+import { RefreshCw, Calendar, User, ExternalLink, Trash2, AlertTriangle } from 'lucide-react';
 import { trelloService, TrelloCard, TrelloList } from '@/services/trelloService';
 import { TrelloConfigModal } from '@/components/TrelloConfigModal';
 import { CreateCardModal } from '@/components/CreateCardModal';
@@ -21,6 +21,7 @@ export default function ProducaoMateriais() {
   const [lists, setLists] = useState<TrelloList[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [draggedCard, setDraggedCard] = useState<TrelloCard | null>(null);
+  const [connectionError, setConnectionError] = useState<string | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -30,29 +31,36 @@ export default function ProducaoMateriais() {
   const loadTrelloData = async () => {
     try {
       setIsLoading(true);
+      setConnectionError(null);
       console.log('Carregando dados do Trello...');
       
+      if (!trelloService.isConnected()) {
+        throw new Error('Trello não está conectado. Configure as credenciais primeiro.');
+      }
+
+      console.log('TrelloService: Fazendo chamadas para API...');
       const [trelloCards, trelloLists] = await Promise.all([
         trelloService.getTrelloCards(),
         trelloService.getTrelloLists()
       ]);
 
-      console.log('Cards carregados:', trelloCards);
-      console.log('Lists carregadas:', trelloLists);
+      console.log('Cards recebidos:', trelloCards.length);
+      console.log('Listas recebidas:', trelloLists.length);
 
-      setCards(trelloCards);
-      setLists(trelloLists);
+      setCards(trelloCards || []);
+      setLists(trelloLists || []);
 
       toast({
         title: "Dados atualizados!",
-        description: `${trelloCards.length} cards carregados do Trello`
+        description: `${trelloCards?.length || 0} cards e ${trelloLists?.length || 0} listas carregados do Trello`
       });
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao carregar dados do Trello:', error);
+      setConnectionError(error.message);
       toast({
         title: "Erro ao carregar produção",
-        description: "Não foi possível conectar com o Trello",
+        description: error.message || "Não foi possível conectar com o Trello",
         type: "error"
       });
     } finally {
@@ -61,16 +69,18 @@ export default function ProducaoMateriais() {
   };
 
   const getCardsByStatus = (statusId: string) => {
+    if (!lists.length || !cards.length) return [];
+
     // Mapear IDs de lista reais para nossos status
     const listMapping = lists.reduce((acc, list) => {
       const normalizedName = list.name.toLowerCase();
       if (normalizedName.includes('briefing') || normalizedName.includes('recebido')) {
         acc[list.id] = 'briefings';
-      } else if (normalizedName.includes('criação') || normalizedName.includes('criacao')) {
+      } else if (normalizedName.includes('criação') || normalizedName.includes('criacao') || normalizedName.includes('criando')) {
         acc[list.id] = 'criacao';
       } else if (normalizedName.includes('revisão') || normalizedName.includes('revisao')) {
         acc[list.id] = 'revisao';
-      } else if (normalizedName.includes('aprovado') || normalizedName.includes('concluído')) {
+      } else if (normalizedName.includes('aprovado') || normalizedName.includes('concluído') || normalizedName.includes('finalizado')) {
         acc[list.id] = 'aprovado';
       }
       return acc;
@@ -78,7 +88,7 @@ export default function ProducaoMateriais() {
 
     return cards.filter(card => {
       const mappedStatus = listMapping[card.idList];
-      return mappedStatus === statusId || card.idList === statusId;
+      return mappedStatus === statusId;
     });
   };
 
@@ -130,11 +140,11 @@ export default function ProducaoMateriais() {
         case 'briefings':
           return normalizedName.includes('briefing') || normalizedName.includes('recebido');
         case 'criacao':
-          return normalizedName.includes('criação') || normalizedName.includes('criacao');
+          return normalizedName.includes('criação') || normalizedName.includes('criacao') || normalizedName.includes('criando');
         case 'revisao':
           return normalizedName.includes('revisão') || normalizedName.includes('revisao');
         case 'aprovado':
-          return normalizedName.includes('aprovado') || normalizedName.includes('concluído');
+          return normalizedName.includes('aprovado') || normalizedName.includes('concluído') || normalizedName.includes('finalizado');
         default:
           return false;
       }
@@ -233,16 +243,38 @@ export default function ProducaoMateriais() {
           ))}
         </div>
 
-        {/* Info Card */}
-        <Card className="bg-green-900/20 border-green-500/30">
-          <CardContent className="p-4">
-            <div className="flex items-start gap-3">
-              <RefreshCw className="h-5 w-5 text-green-400 mt-0.5" />
-              <div>
-                <h3 className="text-white font-medium mb-1">✅ Integração Ativa com Trello</h3>
-                <p className="text-gray-400 text-sm">
-                  Conectado ao quadro "Produção Criart". Você pode criar, editar, mover e deletar cards diretamente desta interface.
-                  {trelloService.isConnected() && (
+        {/* Connection Error */}
+        {connectionError && (
+          <Card className="bg-red-900/20 border-red-500/30">
+            <CardContent className="p-4">
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="h-5 w-5 text-red-400 mt-0.5" />
+                <div>
+                  <h3 className="text-white font-medium mb-1">❌ Erro de Conexão com Trello</h3>
+                  <p className="text-gray-400 text-sm mb-2">{connectionError}</p>
+                  <Button 
+                    onClick={loadTrelloData}
+                    size="sm"
+                    className="bg-red-600 hover:bg-red-700"
+                  >
+                    Tentar Novamente
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Success Info Card */}
+        {!connectionError && trelloService.isConnected() && (
+          <Card className="bg-green-900/20 border-green-500/30">
+            <CardContent className="p-4">
+              <div className="flex items-start gap-3">
+                <RefreshCw className="h-5 w-5 text-green-400 mt-0.5" />
+                <div>
+                  <h3 className="text-white font-medium mb-1">✅ Integração Ativa com Trello</h3>
+                  <p className="text-gray-400 text-sm">
+                    Conectado ao quadro "Produção Criart". Você pode criar, editar, mover e deletar cards diretamente desta interface.
                     <a 
                       href={trelloService.getBoardUrl()} 
                       target="_blank" 
@@ -251,17 +283,22 @@ export default function ProducaoMateriais() {
                     >
                       Ver no Trello <ExternalLink className="h-3 w-3" />
                     </a>
-                  )}
-                </p>
+                  </p>
+                </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        )}
 
         {isLoading ? (
           <div className="text-center text-gray-400 py-8">
             <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-2" />
             Carregando produção...
+          </div>
+        ) : connectionError ? (
+          <div className="text-center text-gray-400 py-8">
+            <AlertTriangle className="h-8 w-8 mx-auto mb-2 text-red-400" />
+            Erro na conexão com o Trello. Verifique as configurações.
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">

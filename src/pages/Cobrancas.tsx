@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -19,8 +18,9 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Plus, CheckCircle, Clock, AlertCircle, Edit, Trash2, FileText } from 'lucide-react';
+import { Plus, CheckCircle, Clock, AlertCircle, Edit, Trash2, FileText, QrCode } from 'lucide-react';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
+import { PixQRCode } from '@/components/PixQRCode';
 import { useToast } from '@/hooks/use-toast';
 import { generateCobrancaPDF } from '@/utils/pdfGenerator';
 import { apiService } from '@/services/api';
@@ -30,6 +30,8 @@ const Cobrancas = () => {
   const [receitas, setReceitas] = useState<Cobranca[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isPixDialogOpen, setIsPixDialogOpen] = useState(false);
+  const [selectedCobranca, setSelectedCobranca] = useState<Cobranca | null>(null);
   const [editingReceita, setEditingReceita] = useState<Cobranca | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; id: number | null }>({
     isOpen: false,
@@ -197,6 +199,11 @@ const Cobrancas = () => {
     });
   };
 
+  const showPixQR = (receita: Cobranca) => {
+    setSelectedCobranca(receita);
+    setIsPixDialogOpen(true);
+  };
+
   if (loading) {
     return (
       <DashboardLayout>
@@ -351,6 +358,15 @@ const Cobrancas = () => {
                         <Button
                           variant="ghost"
                           size="sm"
+                          onClick={() => showPixQR(receita)}
+                          className="text-green-400 hover:text-green-300"
+                          title="Gerar QR Code PIX"
+                        >
+                          <QrCode className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
                           onClick={() => generatePDF(receita)}
                           className="text-blue-400 hover:text-blue-300"
                         >
@@ -381,6 +397,24 @@ const Cobrancas = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* PIX QR Code Dialog */}
+      <Dialog open={isPixDialogOpen} onOpenChange={setIsPixDialogOpen}>
+        <DialogContent className="bg-dark-200 border-dark-300 max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="text-white">
+              QR Code PIX - {selectedCobranca?.cliente}
+            </DialogTitle>
+          </DialogHeader>
+          {selectedCobranca && (
+            <PixQRCode 
+              amount={selectedCobranca.valor}
+              clientName={selectedCobranca.cliente}
+              description={`Cobrança #${selectedCobranca.id}`}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
 
       <ConfirmDialog
         isOpen={deleteConfirm.isOpen}

@@ -57,7 +57,10 @@ class TrelloService {
   };
   
   private getAuthParams() {
-    return `key=${this.credentials.key}&token=${this.credentials.token}`;
+    return new URLSearchParams({
+      key: this.credentials.key || '',
+      token: this.credentials.token || ''
+    });
   }
 
   async getTrelloCards(): Promise<TrelloCard[]> {
@@ -68,13 +71,20 @@ class TrelloService {
         throw new Error('Credenciais do Trello não configuradas');
       }
 
-      console.log('TrelloService: Usando API real do Trello');
+      console.log('TrelloService: Usando credenciais configuradas');
+      const params = this.getAuthParams();
+      params.append('actions', 'all');
+      params.append('checklists', 'all');
+      params.append('members', 'true');
+
       const response = await fetch(
-        `${this.baseUrl}/boards/${this.credentials.boardId}/cards?${this.getAuthParams()}&actions=all&checklists=all&members=true`
+        `${this.baseUrl}/boards/${this.credentials.boardId}/cards?${params.toString()}`
       );
       
       if (!response.ok) {
-        throw new Error(`Erro na API do Trello: ${response.status}`);
+        const errorText = await response.text();
+        console.error('Erro na resposta da API:', response.status, errorText);
+        throw new Error(`Erro na API do Trello: ${response.status} - ${errorText}`);
       }
       
       const cards = await response.json();
@@ -94,12 +104,15 @@ class TrelloService {
         throw new Error('Credenciais do Trello não configuradas');
       }
 
+      const params = this.getAuthParams();
       const response = await fetch(
-        `${this.baseUrl}/boards/${this.credentials.boardId}/lists?${this.getAuthParams()}`
+        `${this.baseUrl}/boards/${this.credentials.boardId}/lists?${params.toString()}`
       );
       
       if (!response.ok) {
-        throw new Error(`Erro na API do Trello: ${response.status}`);
+        const errorText = await response.text();
+        console.error('Erro na resposta da API:', response.status, errorText);
+        throw new Error(`Erro na API do Trello: ${response.status} - ${errorText}`);
       }
       
       const lists = await response.json();
@@ -117,12 +130,14 @@ class TrelloService {
         throw new Error('Credenciais do Trello não configuradas');
       }
 
+      const params = this.getAuthParams();
       const response = await fetch(
-        `${this.baseUrl}/boards/${this.credentials.boardId}/members?${this.getAuthParams()}`
+        `${this.baseUrl}/boards/${this.credentials.boardId}/members?${params.toString()}`
       );
       
       if (!response.ok) {
-        throw new Error(`Erro ao buscar membros: ${response.status}`);
+        const errorText = await response.text();
+        throw new Error(`Erro ao buscar membros: ${response.status} - ${errorText}`);
       }
       
       const members = await response.json();
@@ -142,10 +157,7 @@ class TrelloService {
         throw new Error('Credenciais do Trello não configuradas');
       }
 
-      // Preparar parâmetros usando URLSearchParams
-      const params = new URLSearchParams();
-      params.append('key', this.credentials.key);
-      params.append('token', this.credentials.token);
+      const params = this.getAuthParams();
       params.append('name', cardData.name);
       params.append('idList', cardData.idList);
       
@@ -161,7 +173,7 @@ class TrelloService {
         params.append('idMembers', cardData.idMembers.join(','));
       }
       
-      if (cardData.pos) {
+      if (cardData.pos !== undefined) {
         params.append('pos', cardData.pos.toString());
       }
 
@@ -195,10 +207,7 @@ class TrelloService {
         throw new Error('Credenciais do Trello não configuradas');
       }
 
-      // Preparar parâmetros usando URLSearchParams
-      const params = new URLSearchParams();
-      params.append('key', this.credentials.key);
-      params.append('token', this.credentials.token);
+      const params = this.getAuthParams();
       
       if (updates.name) {
         params.append('name', updates.name);
@@ -220,7 +229,7 @@ class TrelloService {
         params.append('idMembers', updates.idMembers.join(','));
       }
       
-      if (updates.pos) {
+      if (updates.pos !== undefined) {
         params.append('pos', updates.pos.toString());
       }
 
@@ -258,8 +267,9 @@ class TrelloService {
         throw new Error('Credenciais do Trello não configuradas');
       }
 
+      const params = this.getAuthParams();
       const response = await fetch(
-        `${this.baseUrl}/cards/${cardId}?${this.getAuthParams()}`,
+        `${this.baseUrl}/cards/${cardId}?${params.toString()}`,
         { method: 'DELETE' }
       );
 
@@ -281,8 +291,11 @@ class TrelloService {
         throw new Error('Credenciais do Trello não configuradas');
       }
 
+      const params = this.getAuthParams();
+      params.append('limit', '50');
+
       const response = await fetch(
-        `${this.baseUrl}/cards/${cardId}/actions?${this.getAuthParams()}&limit=50`
+        `${this.baseUrl}/cards/${cardId}/actions?${params.toString()}`
       );
 
       if (!response.ok) {
@@ -307,8 +320,13 @@ class TrelloService {
         throw new Error('Board ID deve conter apenas letras e números (8+ caracteres)');
       }
       
+      const testParams = new URLSearchParams({
+        key,
+        token
+      });
+      
       const testResponse = await fetch(
-        `${this.baseUrl}/boards/${cleanBoardId}?key=${key}&token=${token}`
+        `${this.baseUrl}/boards/${cleanBoardId}?${testParams.toString()}`
       );
       
       if (!testResponse.ok) {
@@ -331,12 +349,7 @@ class TrelloService {
     try {
       const stored = localStorage.getItem('trello_credentials');
       if (stored) {
-        const storedCreds = JSON.parse(stored);
-        this.credentials = {
-          key: storedCreds.key || '703c970019af6615ddd56ff981e9adf2',
-          token: storedCreds.token || 'c062109eefb7d29dcd078b2b81805acb964ce89b8133ad14d0f18793916b85b1',
-          boardId: storedCreds.boardId || '9I93KoUZ'
-        };
+        this.credentials = JSON.parse(stored);
         console.log('TrelloService: Credenciais carregadas do localStorage');
       } else {
         console.log('TrelloService: Usando credenciais padrão');
