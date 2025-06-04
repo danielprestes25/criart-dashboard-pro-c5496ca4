@@ -17,35 +17,45 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   
-  const { login, signup, isAuthenticated } = useAuth();
+  const { login, signup, isAuthenticated, loading: authLoading } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
+  console.log('Login page render:', { isAuthenticated, authLoading, loading });
+
   useEffect(() => {
-    if (isAuthenticated) {
-      navigate('/dashboard');
+    console.log('Login useEffect:', { isAuthenticated, authLoading });
+    if (isAuthenticated && !authLoading) {
+      console.log('User is authenticated, redirecting to dashboard');
+      navigate('/dashboard', { replace: true });
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, authLoading, navigate]);
 
   const getErrorMessage = (error: string) => {
-    if (error.includes('Invalid login credentials')) {
+    console.log('Processing error:', error);
+    
+    if (error.includes('Invalid login credentials') || error.includes('invalid_credentials')) {
       return 'Email ou senha inválidos';
-    } else if (error.includes('Email not confirmed')) {
+    } else if (error.includes('Email not confirmed') || error.includes('email_not_confirmed')) {
       return 'Email não confirmado. Verifique sua caixa de entrada.';
-    } else if (error.includes('User already registered')) {
+    } else if (error.includes('User already registered') || error.includes('user_already_exists')) {
       return 'Usuário já registrado com este email';
-    } else if (error.includes('Password should be at least 6 characters')) {
+    } else if (error.includes('Password should be at least 6 characters') || error.includes('weak_password')) {
       return 'A senha deve ter pelo menos 6 caracteres';
-    } else if (error.includes('Invalid email')) {
+    } else if (error.includes('Invalid email') || error.includes('invalid_email')) {
       return 'Email inválido';
-    } else if (error.includes('Signup disabled')) {
+    } else if (error.includes('Signup disabled') || error.includes('signup_disabled')) {
       return 'Cadastro desabilitado. Entre em contato com o suporte.';
+    } else if (error.includes('Email rate limit exceeded')) {
+      return 'Muitas tentativas. Aguarde alguns minutos antes de tentar novamente.';
     }
     return error;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('Form submission started:', { isLogin, email: !!email, password: !!password, name: !!name });
+    
     setLoading(true);
 
     try {
@@ -70,15 +80,30 @@ export default function Login() {
         return;
       }
 
+      if (password.length < 6) {
+        toast({
+          title: 'Erro',
+          description: 'A senha deve ter pelo menos 6 caracteres',
+          type: 'error'
+        });
+        setLoading(false);
+        return;
+      }
+
       let result;
       if (isLogin) {
+        console.log('Attempting login...');
         result = await login(email, password);
       } else {
+        console.log('Attempting signup...');
         result = await signup(email, password, name);
       }
 
+      console.log('Auth result:', result);
+
       if (result.error) {
         const errorMessage = getErrorMessage(result.error);
+        console.log('Auth error:', errorMessage);
         
         toast({
           title: 'Erro',
@@ -92,7 +117,6 @@ export default function Login() {
             description: 'Verifique seu email para confirmar a conta',
             type: 'success'
           });
-          // Switch to login mode after successful signup
           setIsLogin(true);
           setPassword('');
         } else {
@@ -114,6 +138,15 @@ export default function Login() {
       setLoading(false);
     }
   };
+
+  // Show loading while auth is initializing
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-dark-100 to-dark-300 flex items-center justify-center">
+        <div className="text-white">Carregando...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-dark-100 to-dark-300 flex items-center justify-center p-4">
@@ -151,6 +184,7 @@ export default function Login() {
                     className="bg-dark-300 border-dark-400 text-white"
                     placeholder="Seu nome completo"
                     required={!isLogin}
+                    disabled={loading}
                   />
                 </div>
               )}
@@ -165,6 +199,7 @@ export default function Login() {
                   className="bg-dark-300 border-dark-400 text-white"
                   placeholder="seu@email.com"
                   required
+                  disabled={loading}
                 />
               </div>
 
@@ -180,6 +215,7 @@ export default function Login() {
                     placeholder="Digite sua senha"
                     required
                     minLength={6}
+                    disabled={loading}
                   />
                   <Button
                     type="button"
@@ -187,6 +223,7 @@ export default function Login() {
                     size="sm"
                     className="absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0"
                     onClick={() => setShowPassword(!showPassword)}
+                    disabled={loading}
                   >
                     {showPassword ? (
                       <EyeOff className="h-4 w-4 text-gray-400" />

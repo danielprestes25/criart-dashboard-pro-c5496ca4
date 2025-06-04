@@ -43,22 +43,25 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const fetchUserProfile = async (userId: string, userEmail: string, userName?: string) => {
     try {
-      // Try to fetch existing profile
+      console.log('Fetching profile for user:', userId);
+      
       const { data: profile, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
         .maybeSingle();
       
+      console.log('Profile query result:', { profile, error });
+
       if (!error && profile) {
         return {
           id: profile.id,
-          name: profile.name || 'Usuário',
+          name: profile.name || userName || 'Usuário',
           email: userEmail,
           avatar_url: profile.avatar_url
         };
       } else {
-        // Create new profile if it doesn't exist
+        console.log('Creating new profile for user:', userId);
         const { data: newProfile, error: insertError } = await supabase
           .from('profiles')
           .insert({
@@ -68,20 +71,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           .select()
           .single();
         
+        console.log('Profile creation result:', { newProfile, insertError });
+
         if (!insertError && newProfile) {
           return {
             id: newProfile.id,
-            name: newProfile.name || 'Usuário',
+            name: newProfile.name || userName || 'Usuário',
             email: userEmail,
             avatar_url: newProfile.avatar_url
           };
         }
       }
     } catch (error) {
-      console.error('Error fetching/creating user profile:', error);
+      console.error('Error in fetchUserProfile:', error);
     }
     
-    // Fallback user profile
+    // Fallback profile
     return {
       id: userId,
       name: userName || 'Usuário',
@@ -91,27 +96,30 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   useEffect(() => {
+    console.log('AuthProvider: Setting up auth listener');
     let isMounted = true;
 
-    // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth state change:', event, session);
+        console.log('Auth state change:', { event, session: !!session, user: !!session?.user });
         
         if (!isMounted) return;
         
         setSession(session);
         
         if (session?.user) {
+          console.log('User authenticated:', session.user.id);
           const profile = await fetchUserProfile(
             session.user.id,
             session.user.email || '',
             session.user.user_metadata?.name
           );
           if (isMounted) {
+            console.log('Setting user profile:', profile);
             setUser(profile);
           }
         } else {
+          console.log('No user, clearing state');
           if (isMounted) {
             setUser(null);
           }
@@ -126,6 +134,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // Check for existing session
     const initializeAuth = async () => {
       try {
+        console.log('AuthProvider: Checking for existing session');
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) {
@@ -136,11 +145,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           return;
         }
         
+        console.log('Initial session check:', { session: !!session, user: !!session?.user });
+        
         if (!isMounted) return;
         
         setSession(session);
         
         if (session?.user) {
+          console.log('Found existing session for user:', session.user.id);
           const profile = await fetchUserProfile(
             session.user.id,
             session.user.email || '',
@@ -165,6 +177,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     initializeAuth();
 
     return () => {
+      console.log('AuthProvider: Cleaning up');
       isMounted = false;
       subscription.unsubscribe();
     };
@@ -172,6 +185,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const signup = async (email: string, password: string, name: string) => {
     try {
+      console.log('Attempting signup for:', email);
+      
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -180,6 +195,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           emailRedirectTo: `${window.location.origin}/dashboard`
         }
       });
+
+      console.log('Signup result:', { data: !!data, error });
 
       if (error) {
         console.error('Signup error:', error);
@@ -195,10 +212,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const login = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      console.log('Attempting login for:', email);
+      
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
       });
+
+      console.log('Login result:', { data: !!data, error });
 
       if (error) {
         console.error('Login error:', error);
@@ -214,6 +235,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const logout = async () => {
     try {
+      console.log('Attempting logout');
       await supabase.auth.signOut();
     } catch (error) {
       console.error('Logout error:', error);
@@ -238,7 +260,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         return { error: error.message };
       }
 
-      // Update local state
       if (user) {
         setUser({ ...user, ...updates });
       }
@@ -264,6 +285,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       return { error: 'Erro ao alterar senha' };
     }
   };
+
+  console.log('AuthProvider render:', { 
+    user: !!user, 
+    session: !!session, 
+    loading, 
+    isAuthenticated: !!session 
+  });
 
   const value = {
     user,

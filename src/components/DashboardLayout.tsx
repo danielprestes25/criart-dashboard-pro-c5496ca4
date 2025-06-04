@@ -12,7 +12,7 @@ interface DashboardLayoutProps {
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   const { isAuthenticated, loading } = useAuth();
 
-  console.log('DashboardLayout rendering, isAuthenticated:', isAuthenticated, 'loading:', loading);
+  console.log('DashboardLayout rendering:', { isAuthenticated, loading });
 
   if (loading) {
     return (
@@ -23,9 +23,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   }
 
   if (!isAuthenticated) {
-    console.log('Not authenticated, redirecting to login');
+    console.log('User not authenticated, redirecting to login');
     return <Navigate to="/login" replace />;
   }
+
+  console.log('User authenticated, rendering dashboard');
 
   return (
     <div className="min-h-screen bg-gray-900 flex">
