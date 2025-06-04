@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Employee, Revenue, Expense, Lead, Budget, Campaign, Cobranca } from '@/types/database';
 
@@ -355,6 +354,76 @@ class ApiService {
       .eq('id', id);
     
     if (error) throw error;
+  }
+
+  // Add missing financial analysis method
+  async getFinancialAnalysis() {
+    try {
+      // Get revenues and expenses for analysis
+      const [revenues, expenses] = await Promise.all([
+        this.getRevenues(),
+        this.getExpenses()
+      ]);
+
+      const totalRevenue = revenues.reduce((sum, rev) => sum + Number(rev.amount), 0);
+      const totalExpenses = expenses.reduce((sum, exp) => sum + Number(exp.amount), 0);
+      const profit = totalRevenue - totalExpenses;
+      const profitMargin = totalRevenue > 0 ? (profit / totalRevenue) * 100 : 0;
+
+      // Calculate monthly trends
+      const currentMonth = new Date().getMonth();
+      const currentYear = new Date().getFullYear();
+      
+      const monthlyRevenue = revenues
+        .filter(rev => {
+          const revDate = new Date(rev.date);
+          return revDate.getMonth() === currentMonth && revDate.getFullYear() === currentYear;
+        })
+        .reduce((sum, rev) => sum + Number(rev.amount), 0);
+
+      const monthlyExpenses = expenses
+        .filter(exp => {
+          const expDate = new Date(exp.date);
+          return expDate.getMonth() === currentMonth && expDate.getFullYear() === currentYear;
+        })
+        .reduce((sum, exp) => sum + Number(exp.amount), 0);
+
+      return {
+        totalRevenue,
+        totalExpenses,
+        profit,
+        profitMargin: Number(profitMargin.toFixed(2)),
+        monthlyRevenue,
+        monthlyExpenses,
+        monthlyProfit: monthlyRevenue - monthlyExpenses,
+        insights: this.generateInsights(profit, profitMargin, monthlyRevenue, monthlyExpenses)
+      };
+    } catch (error) {
+      console.error('Error getting financial analysis:', error);
+      throw error;
+    }
+  }
+
+  private generateInsights(profit: number, profitMargin: number, monthlyRevenue: number, monthlyExpenses: number) {
+    const insights = [];
+
+    if (profit > 0) {
+      insights.push("Sua empresa está gerando lucro! Continue monitorando para manter o crescimento.");
+    } else if (profit < 0) {
+      insights.push("Atenção: Suas despesas estão superando as receitas. Considere revisar os custos.");
+    }
+
+    if (profitMargin > 20) {
+      insights.push("Excelente margem de lucro! Sua empresa está muito saudável financeiramente.");
+    } else if (profitMargin < 10 && profitMargin > 0) {
+      insights.push("Margem de lucro baixa. Considere otimizar custos ou aumentar preços.");
+    }
+
+    if (monthlyExpenses > monthlyRevenue) {
+      insights.push("Este mês as despesas estão altas. Revise gastos desnecessários.");
+    }
+
+    return insights;
   }
 }
 

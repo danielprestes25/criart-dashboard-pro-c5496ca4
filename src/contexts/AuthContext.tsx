@@ -49,19 +49,32 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setSession(session);
         
         if (session?.user) {
-          // Fetch user profile
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .single();
+          // Fetch user profile using raw SQL since types aren't updated yet
+          const { data: profile, error } = await supabase
+            .rpc('get_user_profile', { user_id: session.user.id });
           
-          if (profile) {
+          if (!error && profile && profile.length > 0) {
+            const profileData = profile[0];
             setUser({
-              id: profile.id,
-              name: profile.name,
+              id: profileData.id,
+              name: profileData.name || 'Usuário',
               email: session.user.email || '',
-              avatar_url: profile.avatar_url
+              avatar_url: profileData.avatar_url
+            });
+          } else {
+            // If no profile found, create one
+            await supabase
+              .from('profiles' as any)
+              .insert({
+                id: session.user.id,
+                name: session.user.user_metadata?.name || 'Usuário'
+              });
+            
+            setUser({
+              id: session.user.id,
+              name: session.user.user_metadata?.name || 'Usuário',
+              email: session.user.email || '',
+              avatar_url: undefined
             });
           }
         } else {
@@ -75,18 +88,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       if (session?.user) {
+        // Use raw SQL for initial load
         supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single()
-          .then(({ data: profile }) => {
-            if (profile) {
+          .rpc('get_user_profile', { user_id: session.user.id })
+          .then(({ data: profile, error }) => {
+            if (!error && profile && profile.length > 0) {
+              const profileData = profile[0];
               setUser({
-                id: profile.id,
-                name: profile.name,
+                id: profileData.id,
+                name: profileData.name || 'Usuário',
                 email: session.user.email || '',
-                avatar_url: profile.avatar_url
+                avatar_url: profileData.avatar_url
+              });
+            } else {
+              setUser({
+                id: session.user.id,
+                name: session.user.user_metadata?.name || 'Usuário',
+                email: session.user.email || '',
+                avatar_url: undefined
               });
             }
             setLoading(false);
@@ -148,7 +167,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
 
       const { error } = await supabase
-        .from('profiles')
+        .from('profiles' as any)
         .update({
           name: updates.name,
           avatar_url: updates.avatar_url
