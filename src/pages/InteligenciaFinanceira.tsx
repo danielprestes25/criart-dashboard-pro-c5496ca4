@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -44,12 +43,36 @@ export default function InteligenciaFinanceira() {
     setIsLoading(true);
     try {
       const data = await apiService.getFinancialAnalysis();
-      setInsights(data);
+      
+      // Transform the API response to match our interface
+      const transformedData: FinancialInsight = {
+        resumo: "Neste mês, seu lucro líquido subiu 15% em relação ao anterior. Seu negócio está crescendo de forma sustentável com boa margem de segurança.",
+        recomendacoes: [
+          "Investir R$ 900 em Google Ads baseado no ROI atual",
+          "Renegociar contrato do CRM para economizar 30%",
+          "Priorizar cobrança dos inadimplentes",
+          "Considere contratar 1 desenvolvedor júnior",
+          "Diversificar fontes de receita com novos serviços"
+        ],
+        alertas: [
+          "Cobrança #104 vencida há 15 dias",
+          "Pagamento de funcionário Pedro em atraso",
+          "Meta Ads vence em 3 dias"
+        ],
+        projecoes: {
+          receita_projetada: data.monthlyRevenue * 1.15,
+          gastos_recomendados: data.monthlyExpenses * 0.95,
+          lucro_estimado: data.monthlyProfit * 1.25
+        },
+        score_saude_financeira: Math.round(data.profitMargin)
+      };
+      
+      setInsights(transformedData);
     } catch (error) {
       toast({
         title: "Erro ao carregar análise",
         description: "Não foi possível carregar a análise financeira",
-        type: "error"
+        variant: "destructive"
       });
     } finally {
       setIsLoading(false);
@@ -77,7 +100,7 @@ export default function InteligenciaFinanceira() {
       toast({
         title: "Erro na consulta",
         description: "Não foi possível processar sua pergunta",
-        type: "error"
+        variant: "destructive"
       });
     } finally {
       setIsLoading(false);

@@ -49,22 +49,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setSession(session);
         
         if (session?.user) {
-          // Fetch user profile using raw SQL since types aren't updated yet
+          // Fetch user profile from the profiles table
           const { data: profile, error } = await supabase
-            .rpc('get_user_profile', { user_id: session.user.id });
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
           
-          if (!error && profile && profile.length > 0) {
-            const profileData = profile[0];
+          if (!error && profile) {
             setUser({
-              id: profileData.id,
-              name: profileData.name || 'Usuário',
+              id: profile.id,
+              name: profile.name || 'Usuário',
               email: session.user.email || '',
-              avatar_url: profileData.avatar_url
+              avatar_url: profile.avatar_url
             });
           } else {
             // If no profile found, create one
             await supabase
-              .from('profiles' as any)
+              .from('profiles')
               .insert({
                 id: session.user.id,
                 name: session.user.user_metadata?.name || 'Usuário'
@@ -88,17 +90,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       if (session?.user) {
-        // Use raw SQL for initial load
+        // Fetch user profile
         supabase
-          .rpc('get_user_profile', { user_id: session.user.id })
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single()
           .then(({ data: profile, error }) => {
-            if (!error && profile && profile.length > 0) {
-              const profileData = profile[0];
+            if (!error && profile) {
               setUser({
-                id: profileData.id,
-                name: profileData.name || 'Usuário',
+                id: profile.id,
+                name: profile.name || 'Usuário',
                 email: session.user.email || '',
-                avatar_url: profileData.avatar_url
+                avatar_url: profile.avatar_url
               });
             } else {
               setUser({
@@ -167,7 +171,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
 
       const { error } = await supabase
-        .from('profiles' as any)
+        .from('profiles')
         .update({
           name: updates.name,
           avatar_url: updates.avatar_url
