@@ -27,38 +27,58 @@ export default function Login() {
     }
   }, [isAuthenticated, navigate]);
 
+  const getErrorMessage = (error: string) => {
+    if (error.includes('Invalid login credentials')) {
+      return 'Email ou senha inválidos';
+    } else if (error.includes('Email not confirmed')) {
+      return 'Email não confirmado. Verifique sua caixa de entrada.';
+    } else if (error.includes('User already registered')) {
+      return 'Usuário já registrado com este email';
+    } else if (error.includes('Password should be at least 6 characters')) {
+      return 'A senha deve ter pelo menos 6 caracteres';
+    } else if (error.includes('Invalid email')) {
+      return 'Email inválido';
+    } else if (error.includes('Signup disabled')) {
+      return 'Cadastro desabilitado. Entre em contato com o suporte.';
+    }
+    return error;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
+      // Basic validation
+      if (!email.trim() || !password.trim()) {
+        toast({
+          title: 'Erro',
+          description: 'Email e senha são obrigatórios',
+          type: 'error'
+        });
+        setLoading(false);
+        return;
+      }
+
+      if (!isLogin && !name.trim()) {
+        toast({
+          title: 'Erro',
+          description: 'Nome é obrigatório',
+          type: 'error'
+        });
+        setLoading(false);
+        return;
+      }
+
       let result;
       if (isLogin) {
         result = await login(email, password);
       } else {
-        if (!name.trim()) {
-          toast({
-            title: 'Erro',
-            description: 'Nome é obrigatório',
-            type: 'error'
-          });
-          setLoading(false);
-          return;
-        }
         result = await signup(email, password, name);
       }
 
       if (result.error) {
-        let errorMessage = result.error;
-        
-        // Translate common error messages to Portuguese
-        if (errorMessage.includes('Invalid login credentials')) {
-          errorMessage = 'Email ou senha inválidos';
-        } else if (errorMessage.includes('Email not confirmed')) {
-          errorMessage = 'Email não confirmado. Verifique sua caixa de entrada.';
-        } else if (errorMessage.includes('User already registered')) {
-          errorMessage = 'Usuário já registrado com este email';
-        }
+        const errorMessage = getErrorMessage(result.error);
         
         toast({
           title: 'Erro',
@@ -72,9 +92,19 @@ export default function Login() {
             description: 'Verifique seu email para confirmar a conta',
             type: 'success'
           });
+          // Switch to login mode after successful signup
+          setIsLogin(true);
+          setPassword('');
+        } else {
+          toast({
+            title: 'Login realizado!',
+            description: 'Redirecionando...',
+            type: 'success'
+          });
         }
       }
     } catch (error) {
+      console.error('Form submission error:', error);
       toast({
         title: 'Erro',
         description: 'Erro inesperado. Tente novamente.',
@@ -149,6 +179,7 @@ export default function Login() {
                     className="bg-dark-300 border-dark-400 text-white pr-10"
                     placeholder="Digite sua senha"
                     required
+                    minLength={6}
                   />
                   <Button
                     type="button"
@@ -178,8 +209,13 @@ export default function Login() {
                 <Button
                   type="button"
                   variant="link"
-                  onClick={() => setIsLogin(!isLogin)}
+                  onClick={() => {
+                    setIsLogin(!isLogin);
+                    setPassword('');
+                    setName('');
+                  }}
                   className="text-primary hover:text-primary/80"
+                  disabled={loading}
                 >
                   {isLogin 
                     ? 'Não tem conta? Criar uma' 

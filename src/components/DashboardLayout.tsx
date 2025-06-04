@@ -10,9 +10,17 @@ interface DashboardLayoutProps {
 }
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, loading } = useAuth();
 
-  console.log('DashboardLayout rendering, isAuthenticated:', isAuthenticated);
+  console.log('DashboardLayout rendering, isAuthenticated:', isAuthenticated, 'loading:', loading);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+        <div className="text-white">Carregando...</div>
+      </div>
+    );
+  }
 
   if (!isAuthenticated) {
     console.log('Not authenticated, redirecting to login');

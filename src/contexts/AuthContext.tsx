@@ -41,87 +41,133 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const fetchUserProfile = async (userId: string, userEmail: string, userName?: string) => {
+    try {
+      // Try to fetch existing profile
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .maybeSingle();
+      
+      if (!error && profile) {
+        return {
+          id: profile.id,
+          name: profile.name || 'Usuário',
+          email: userEmail,
+          avatar_url: profile.avatar_url
+        };
+      } else {
+        // Create new profile if it doesn't exist
+        const { data: newProfile, error: insertError } = await supabase
+          .from('profiles')
+          .insert({
+            id: userId,
+            name: userName || 'Usuário'
+          })
+          .select()
+          .single();
+        
+        if (!insertError && newProfile) {
+          return {
+            id: newProfile.id,
+            name: newProfile.name || 'Usuário',
+            email: userEmail,
+            avatar_url: newProfile.avatar_url
+          };
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching/creating user profile:', error);
+    }
+    
+    // Fallback user profile
+    return {
+      id: userId,
+      name: userName || 'Usuário',
+      email: userEmail,
+      avatar_url: undefined
+    };
+  };
+
   useEffect(() => {
+    let isMounted = true;
+
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log('Auth state change:', event, session);
+        
+        if (!isMounted) return;
+        
         setSession(session);
         
         if (session?.user) {
-          // Fetch user profile from the profiles table using maybeSingle to avoid errors
-          const { data: profile, error } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .maybeSingle();
-          
-          if (!error && profile) {
-            setUser({
-              id: profile.id,
-              name: profile.name || 'Usuário',
-              email: session.user.email || '',
-              avatar_url: profile.avatar_url
-            });
-          } else {
-            // If no profile found, create one
-            const { error: insertError } = await supabase
-              .from('profiles')
-              .insert({
-                id: session.user.id,
-                name: session.user.user_metadata?.name || 'Usuário'
-              });
-            
-            if (!insertError) {
-              setUser({
-                id: session.user.id,
-                name: session.user.user_metadata?.name || 'Usuário',
-                email: session.user.email || '',
-                avatar_url: undefined
-              });
-            }
+          const profile = await fetchUserProfile(
+            session.user.id,
+            session.user.email || '',
+            session.user.user_metadata?.name
+          );
+          if (isMounted) {
+            setUser(profile);
           }
         } else {
-          setUser(null);
+          if (isMounted) {
+            setUser(null);
+          }
         }
-        setLoading(false);
+        
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     );
 
     // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      if (session?.user) {
-        // Fetch user profile using maybeSingle to avoid errors
-        supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .maybeSingle()
-          .then(({ data: profile, error }) => {
-            if (!error && profile) {
-              setUser({
-                id: profile.id,
-                name: profile.name || 'Usuário',
-                email: session.user.email || '',
-                avatar_url: profile.avatar_url
-              });
-            } else {
-              setUser({
-                id: session.user.id,
-                name: session.user.user_metadata?.name || 'Usuário',
-                email: session.user.email || '',
-                avatar_url: undefined
-              });
-            }
+    const initializeAuth = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('Error getting session:', error);
+          if (isMounted) {
             setLoading(false);
-          });
-      } else {
-        setLoading(false);
+          }
+          return;
+        }
+        
+        if (!isMounted) return;
+        
+        setSession(session);
+        
+        if (session?.user) {
+          const profile = await fetchUserProfile(
+            session.user.id,
+            session.user.email || '',
+            session.user.user_metadata?.name
+          );
+          if (isMounted) {
+            setUser(profile);
+          }
+        }
+        
+        if (isMounted) {
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error('Error initializing auth:', error);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
-    });
+    };
 
-    return () => subscription.unsubscribe();
+    initializeAuth();
+
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signup = async (email: string, password: string, name: string) => {
@@ -136,11 +182,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       });
 
       if (error) {
+        console.error('Signup error:', error);
         return { error: error.message };
       }
 
       return {};
     } catch (error) {
+      console.error('Signup catch error:', error);
       return { error: 'Erro inesperado ao criar conta' };
     }
   };
@@ -153,19 +201,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       });
 
       if (error) {
-        console.log('Login error:', error);
+        console.error('Login error:', error);
         return { error: error.message };
       }
 
       return {};
     } catch (error) {
-      console.log('Login catch error:', error);
+      console.error('Login catch error:', error);
       return { error: 'Erro inesperado ao fazer login' };
     }
   };
 
   const logout = async () => {
-    await supabase.auth.signOut();
+    try {
+      await supabase.auth.signOut();
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
   };
 
   const updateProfile = async (updates: Partial<UserProfile>) => {
