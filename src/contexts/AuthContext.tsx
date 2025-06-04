@@ -49,12 +49,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setSession(session);
         
         if (session?.user) {
-          // Fetch user profile from the profiles table
+          // Fetch user profile from the profiles table using maybeSingle to avoid errors
           const { data: profile, error } = await supabase
             .from('profiles')
             .select('*')
             .eq('id', session.user.id)
-            .single();
+            .maybeSingle();
           
           if (!error && profile) {
             setUser({
@@ -65,19 +65,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             });
           } else {
             // If no profile found, create one
-            await supabase
+            const { error: insertError } = await supabase
               .from('profiles')
               .insert({
                 id: session.user.id,
                 name: session.user.user_metadata?.name || 'Usuário'
               });
             
-            setUser({
-              id: session.user.id,
-              name: session.user.user_metadata?.name || 'Usuário',
-              email: session.user.email || '',
-              avatar_url: undefined
-            });
+            if (!insertError) {
+              setUser({
+                id: session.user.id,
+                name: session.user.user_metadata?.name || 'Usuário',
+                email: session.user.email || '',
+                avatar_url: undefined
+              });
+            }
           }
         } else {
           setUser(null);
@@ -90,12 +92,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       if (session?.user) {
-        // Fetch user profile
+        // Fetch user profile using maybeSingle to avoid errors
         supabase
           .from('profiles')
           .select('*')
           .eq('id', session.user.id)
-          .single()
+          .maybeSingle()
           .then(({ data: profile, error }) => {
             if (!error && profile) {
               setUser({
@@ -151,11 +153,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       });
 
       if (error) {
+        console.log('Login error:', error);
         return { error: error.message };
       }
 
       return {};
     } catch (error) {
+      console.log('Login catch error:', error);
       return { error: 'Erro inesperado ao fazer login' };
     }
   };

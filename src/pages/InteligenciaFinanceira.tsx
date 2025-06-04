@@ -72,7 +72,7 @@ export default function InteligenciaFinanceira() {
       toast({
         title: "Erro ao carregar análise",
         description: "Não foi possível carregar a análise financeira",
-        variant: "destructive"
+        type: "error"
       });
     } finally {
       setIsLoading(false);
@@ -100,7 +100,7 @@ export default function InteligenciaFinanceira() {
       toast({
         title: "Erro na consulta",
         description: "Não foi possível processar sua pergunta",
-        variant: "destructive"
+        type: "error"
       });
     } finally {
       setIsLoading(false);

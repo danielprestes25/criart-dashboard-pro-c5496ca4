@@ -49,9 +49,20 @@ export default function Login() {
       }
 
       if (result.error) {
+        let errorMessage = result.error;
+        
+        // Translate common error messages to Portuguese
+        if (errorMessage.includes('Invalid login credentials')) {
+          errorMessage = 'Email ou senha inválidos';
+        } else if (errorMessage.includes('Email not confirmed')) {
+          errorMessage = 'Email não confirmado. Verifique sua caixa de entrada.';
+        } else if (errorMessage.includes('User already registered')) {
+          errorMessage = 'Usuário já registrado com este email';
+        }
+        
         toast({
           title: 'Erro',
-          description: result.error,
+          description: errorMessage,
           type: 'error'
         });
       } else {
