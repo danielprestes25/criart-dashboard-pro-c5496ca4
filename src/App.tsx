@@ -15,6 +15,8 @@ import CrmLeads from "./pages/CrmLeads";
 import InteligenciaFinanceira from "./pages/InteligenciaFinanceira";
 import ProducaoMateriais from "./pages/ProducaoMateriais";
 import Perfil from "./pages/Perfil";
+import SocialMedia from "./pages/SocialMedia";
+import Designer from "./pages/Designer";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -37,6 +39,8 @@ const App = () => (
             <Route path="/inteligencia-financeira" element={<InteligenciaFinanceira />} />
             <Route path="/producao-materiais" element={<ProducaoMateriais />} />
             <Route path="/perfil" element={<Perfil />} />
+            <Route path="/social-media" element={<SocialMedia />} />
+            <Route path="/designer" element={<Designer />} />
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
             <Route path="*" element={<NotFound />} />
           </Routes>

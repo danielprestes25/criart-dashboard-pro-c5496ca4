@@ -3,23 +3,27 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { supabase } from '@/integrations/supabase/client';
 import { User, Session } from '@supabase/supabase-js';
 
+type UserRole = 'social' | 'design' | 'admin';
+
 interface UserProfile {
   id: string;
   name: string;
   email: string;
   avatar_url?: string;
+  role: UserRole;
 }
 
 interface AuthContextType {
   user: UserProfile | null;
   session: Session | null;
   login: (email: string, password: string) => Promise<{ error?: string }>;
-  signup: (email: string, password: string, name: string) => Promise<{ error?: string }>;
+  signup: (email: string, password: string, name: string, role?: UserRole) => Promise<{ error?: string }>;
   logout: () => Promise<void>;
   updateProfile: (updates: Partial<UserProfile>) => Promise<{ error?: string }>;
   updatePassword: (currentPassword: string, newPassword: string) => Promise<{ error?: string }>;
   isAuthenticated: boolean;
   loading: boolean;
+  hasRole: (requiredRole: UserRole | UserRole[]) => boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -58,7 +62,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           id: profile.id,
           name: profile.name || userName || 'Usuário',
           email: userEmail,
-          avatar_url: profile.avatar_url
+          avatar_url: profile.avatar_url,
+          role: profile.role || 'social'
         };
       } else {
         console.log('Creating new profile for user:', userId);
@@ -66,7 +71,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           .from('profiles')
           .insert({
             id: userId,
-            name: userName || 'Usuário'
+            name: userName || 'Usuário',
+            role: 'social'
           })
           .select()
           .single();
@@ -78,7 +84,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             id: newProfile.id,
             name: newProfile.name || userName || 'Usuário',
             email: userEmail,
-            avatar_url: newProfile.avatar_url
+            avatar_url: newProfile.avatar_url,
+            role: newProfile.role || 'social'
           };
         }
       }
@@ -91,8 +98,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       id: userId,
       name: userName || 'Usuário',
       email: userEmail,
-      avatar_url: undefined
+      avatar_url: undefined,
+      role: 'social' as UserRole
     };
+  };
+
+  const hasRole = (requiredRole: UserRole | UserRole[]) => {
+    if (!user) return false;
+    
+    if (Array.isArray(requiredRole)) {
+      return requiredRole.includes(user.role);
+    }
+    
+    // Admin tem acesso a tudo
+    if (user.role === 'admin') return true;
+    
+    return user.role === requiredRole;
   };
 
   useEffect(() => {
@@ -183,15 +204,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     };
   }, []);
 
-  const signup = async (email: string, password: string, name: string) => {
+  const signup = async (email: string, password: string, name: string, role: UserRole = 'social') => {
     try {
-      console.log('Attempting signup for:', email);
+      console.log('Attempting signup for:', email, 'with role:', role);
       
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          data: { name },
+          data: { name, role },
           emailRedirectTo: `${window.location.origin}/dashboard`
         }
       });
@@ -252,7 +273,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         .from('profiles')
         .update({
           name: updates.name,
-          avatar_url: updates.avatar_url
+          avatar_url: updates.avatar_url,
+          role: updates.role
         })
         .eq('id', session.user.id);
 
@@ -290,7 +312,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     user: !!user, 
     session: !!session, 
     loading, 
-    isAuthenticated: !!session 
+    isAuthenticated: !!session,
+    userRole: user?.role 
   });
 
   const value = {
@@ -303,6 +326,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     updatePassword,
     isAuthenticated: !!session,
     loading,
+    hasRole,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

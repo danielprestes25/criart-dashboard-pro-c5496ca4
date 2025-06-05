@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { AppSidebar } from './AppSidebar';
 import { AppHeader } from './AppHeader';
@@ -10,9 +10,10 @@ interface DashboardLayoutProps {
 }
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading, user } = useAuth();
+  const location = useLocation();
 
-  console.log('DashboardLayout rendering:', { isAuthenticated, loading });
+  console.log('DashboardLayout rendering:', { isAuthenticated, loading, user: !!user, role: user?.role });
 
   if (loading) {
     return (
@@ -25,6 +26,22 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   if (!isAuthenticated) {
     console.log('User not authenticated, redirecting to login');
     return <Navigate to="/login" replace />;
+  }
+
+  // Redirecionamento baseado em role após login
+  if (user && location.pathname === '/dashboard') {
+    console.log('Redirecting based on role:', user.role);
+    switch (user.role) {
+      case 'social':
+        return <Navigate to="/social-media" replace />;
+      case 'design':
+        return <Navigate to="/designer" replace />;
+      case 'admin':
+        // Admin fica no dashboard padrão
+        break;
+      default:
+        break;
+    }
   }
 
   console.log('User authenticated, rendering dashboard');

@@ -120,6 +120,36 @@ export type Database = {
         }
         Relationships: []
       }
+      daily_goals: {
+        Row: {
+          completed: boolean | null
+          created_at: string | null
+          date: string
+          goal_text: string
+          id: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          completed?: boolean | null
+          created_at?: string | null
+          date?: string
+          goal_text: string
+          id?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          completed?: boolean | null
+          created_at?: string | null
+          date?: string
+          goal_text?: string
+          id?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       employees: {
         Row: {
           created_at: string | null
@@ -228,12 +258,49 @@ export type Database = {
         }
         Relationships: []
       }
+      posts: {
+        Row: {
+          content: string | null
+          created_at: string | null
+          id: string
+          platform: string
+          scheduled_date: string
+          status: string | null
+          title: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string | null
+          id?: string
+          platform: string
+          scheduled_date: string
+          status?: string | null
+          title: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          content?: string | null
+          created_at?: string | null
+          id?: string
+          platform?: string
+          scheduled_date?: string
+          status?: string | null
+          title?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
           created_at: string | null
           id: string
           name: string | null
+          role: Database["public"]["Enums"]["user_role"] | null
           updated_at: string | null
         }
         Insert: {
@@ -241,6 +308,7 @@ export type Database = {
           created_at?: string | null
           id: string
           name?: string | null
+          role?: Database["public"]["Enums"]["user_role"] | null
           updated_at?: string | null
         }
         Update: {
@@ -248,6 +316,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           name?: string | null
+          role?: Database["public"]["Enums"]["user_role"] | null
           updated_at?: string | null
         }
         Relationships: []
@@ -285,6 +354,42 @@ export type Database = {
         }
         Relationships: []
       }
+      social_insights: {
+        Row: {
+          created_at: string | null
+          date: string
+          engagement_rate: number | null
+          followers_count: number | null
+          id: string
+          impressions: number | null
+          platform: string
+          reach: number | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          date?: string
+          engagement_rate?: number | null
+          followers_count?: number | null
+          id?: string
+          impressions?: number | null
+          platform: string
+          reach?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          date?: string
+          engagement_rate?: number | null
+          followers_count?: number | null
+          id?: string
+          impressions?: number | null
+          platform?: string
+          reach?: number | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -293,7 +398,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      user_role: "social" | "design" | "admin"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -408,6 +513,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      user_role: ["social", "design", "admin"],
+    },
   },
 } as const
