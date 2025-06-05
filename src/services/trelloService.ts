@@ -1,4 +1,3 @@
-
 interface TrelloCard {
   id: string;
   name: string;
@@ -71,7 +70,7 @@ class TrelloService {
         throw new Error('Credenciais do Trello não configuradas');
       }
 
-      console.log('TrelloService: Usando credenciais configuradas');
+      console.log('TrelloService: Usando credenciais atualizadas');
       const params = this.getAuthParams();
       params.append('actions', 'all');
       params.append('checklists', 'all');
@@ -349,10 +348,13 @@ class TrelloService {
     try {
       const stored = localStorage.getItem('trello_credentials');
       if (stored) {
-        this.credentials = JSON.parse(stored);
+        const storedCreds = JSON.parse(stored);
+        this.credentials = { ...this.credentials, ...storedCreds };
         console.log('TrelloService: Credenciais carregadas do localStorage');
       } else {
-        console.log('TrelloService: Usando credenciais padrão');
+        console.log('TrelloService: Usando credenciais atualizadas');
+        // Salvar as credenciais atualizadas no localStorage
+        localStorage.setItem('trello_credentials', JSON.stringify(this.credentials));
       }
     } catch (error) {
       console.error('TrelloService: Erro ao carregar credenciais:', error);
@@ -366,7 +368,7 @@ class TrelloService {
       boardId: '9I93KoUZ'
     };
     localStorage.removeItem('trello_credentials');
-    console.log('TrelloService: Credenciais resetadas para padrão');
+    console.log('TrelloService: Credenciais resetadas para as novas');
   }
 
   isConnected() {
