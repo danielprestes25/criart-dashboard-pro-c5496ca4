@@ -9,7 +9,288 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      budgets: {
+        Row: {
+          amount: number
+          client_name: string
+          created_at: string | null
+          created_date: string
+          id: number
+          project_description: string
+          status: string
+          updated_at: string | null
+          valid_until: string
+        }
+        Insert: {
+          amount: number
+          client_name: string
+          created_at?: string | null
+          created_date?: string
+          id?: number
+          project_description: string
+          status?: string
+          updated_at?: string | null
+          valid_until: string
+        }
+        Update: {
+          amount?: number
+          client_name?: string
+          created_at?: string | null
+          created_date?: string
+          id?: number
+          project_description?: string
+          status?: string
+          updated_at?: string | null
+          valid_until?: string
+        }
+        Relationships: []
+      }
+      campaigns: {
+        Row: {
+          budget: number
+          created_at: string | null
+          end_date: string
+          id: number
+          name: string
+          objective: string | null
+          platform: string
+          start_date: string
+          status: string
+          target_audience: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          budget: number
+          created_at?: string | null
+          end_date: string
+          id?: number
+          name: string
+          objective?: string | null
+          platform: string
+          start_date: string
+          status?: string
+          target_audience?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          budget?: number
+          created_at?: string | null
+          end_date?: string
+          id?: number
+          name?: string
+          objective?: string | null
+          platform?: string
+          start_date?: string
+          status?: string
+          target_audience?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      cobrancas: {
+        Row: {
+          cliente: string
+          created_at: string | null
+          data: string
+          id: number
+          linkpagamento: string | null
+          status: string
+          updated_at: string | null
+          valor: number
+        }
+        Insert: {
+          cliente: string
+          created_at?: string | null
+          data: string
+          id?: number
+          linkpagamento?: string | null
+          status?: string
+          updated_at?: string | null
+          valor: number
+        }
+        Update: {
+          cliente?: string
+          created_at?: string | null
+          data?: string
+          id?: number
+          linkpagamento?: string | null
+          status?: string
+          updated_at?: string | null
+          valor?: number
+        }
+        Relationships: []
+      }
+      employees: {
+        Row: {
+          created_at: string | null
+          email: string
+          hire_date: string
+          id: number
+          name: string
+          role: string
+          salary: number
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          hire_date: string
+          id?: number
+          name: string
+          role: string
+          salary: number
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          hire_date?: string
+          id?: number
+          name?: string
+          role?: string
+          salary?: number
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      expenses: {
+        Row: {
+          amount: number
+          category: string
+          created_at: string | null
+          date: string
+          description: string
+          id: number
+          supplier: string
+          updated_at: string | null
+        }
+        Insert: {
+          amount: number
+          category: string
+          created_at?: string | null
+          date: string
+          description: string
+          id?: number
+          supplier: string
+          updated_at?: string | null
+        }
+        Update: {
+          amount?: number
+          category?: string
+          created_at?: string | null
+          date?: string
+          description?: string
+          id?: number
+          supplier?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      leads: {
+        Row: {
+          company: string | null
+          created_at: string | null
+          email: string
+          id: number
+          name: string
+          notes: string | null
+          phone: string | null
+          score: number
+          source: string
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          company?: string | null
+          created_at?: string | null
+          email: string
+          id?: number
+          name: string
+          notes?: string | null
+          phone?: string | null
+          score?: number
+          source: string
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          company?: string | null
+          created_at?: string | null
+          email?: string
+          id?: number
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          score?: number
+          source?: string
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string | null
+          id: string
+          name: string
+          role: string
+          updated_at: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string | null
+          id: string
+          name: string
+          role: string
+          updated_at?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string | null
+          id?: string
+          name?: string
+          role?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      revenues: {
+        Row: {
+          amount: number
+          category: string
+          client: string
+          created_at: string | null
+          date: string
+          description: string
+          id: number
+          updated_at: string | null
+        }
+        Insert: {
+          amount: number
+          category: string
+          client: string
+          created_at?: string | null
+          date: string
+          description: string
+          id?: number
+          updated_at?: string | null
+        }
+        Update: {
+          amount?: number
+          category?: string
+          client?: string
+          created_at?: string | null
+          date?: string
+          description?: string
+          id?: number
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
