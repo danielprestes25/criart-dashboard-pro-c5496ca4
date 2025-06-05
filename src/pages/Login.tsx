@@ -75,7 +75,7 @@ export default function Login() {
       toast({
         title: "Erro",
         description: "Por favor, preencha todos os campos",
-        variant: "destructive",
+        type: "error",
       });
       return;
     }
@@ -93,12 +93,13 @@ export default function Login() {
           description: error === 'Invalid login credentials' 
             ? "Email ou senha incorretos"
             : error,
-          variant: "destructive",
+          type: "error",
         });
       } else {
         toast({
           title: "Login realizado!",
           description: "Bem-vindo de volta!",
+          type: "success",
         });
       }
     } catch (error) {
@@ -106,7 +107,7 @@ export default function Login() {
       toast({
         title: "Erro",
         description: "Erro inesperado ao fazer login",
-        variant: "destructive",
+        type: "error",
       });
     } finally {
       setIsSubmitting(false);
@@ -120,7 +121,7 @@ export default function Login() {
       toast({
         title: "Erro",
         description: "Por favor, preencha todos os campos obrigatórios",
-        variant: "destructive",
+        type: "error",
       });
       return;
     }
@@ -129,7 +130,7 @@ export default function Login() {
       toast({
         title: "Erro",
         description: "As senhas não coincidem",
-        variant: "destructive",
+        type: "error",
       });
       return;
     }
@@ -138,7 +139,7 @@ export default function Login() {
       toast({
         title: "Erro",
         description: "A senha deve ter pelo menos 6 caracteres",
-        variant: "destructive",
+        type: "error",
       });
       return;
     }
@@ -154,12 +155,13 @@ export default function Login() {
         toast({
           title: "Erro no cadastro",
           description: error,
-          variant: "destructive",
+          type: "error",
         });
       } else {
         toast({
           title: "Conta criada!",
           description: "Sua conta foi criada com sucesso. Você já está logado!",
+          type: "success",
         });
       }
     } catch (error) {
@@ -167,7 +169,7 @@ export default function Login() {
       toast({
         title: "Erro",
         description: "Erro inesperado ao criar conta",
-        variant: "destructive",
+        type: "error",
       });
     } finally {
       setIsSubmitting(false);
