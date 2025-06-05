@@ -14,7 +14,7 @@ export function AppSidebar() {
     const items = [];
 
     // Admin vê tudo
-    if (hasRole('admin')) {
+    if (hasRole(['admin'])) {
       items.push(
         { title: 'Dashboard', url: '/dashboard', icon: LayoutDashboard },
         { title: 'Funcionários', url: '/funcionarios', icon: Users },
@@ -29,7 +29,7 @@ export function AppSidebar() {
       );
     }
     // Social Media role
-    else if (hasRole('social')) {
+    else if (hasRole(['social'])) {
       items.push(
         { title: 'Social Media', url: '/social-media', icon: TrendingUp },
         { title: 'Calendário', url: '/social-media/calendario', icon: Calendar },
@@ -38,7 +38,7 @@ export function AppSidebar() {
       );
     }
     // Design role
-    else if (hasRole('design')) {
+    else if (hasRole(['design'])) {
       items.push(
         { title: 'Designer', url: '/designer', icon: ClipboardList },
         { title: 'Kanban', url: '/designer/kanban', icon: ClipboardList },

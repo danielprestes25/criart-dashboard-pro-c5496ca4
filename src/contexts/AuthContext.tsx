@@ -9,6 +9,8 @@ interface UserProfile {
   id: string;
   name: string;
   role: UserRole;
+  email: string;
+  avatar_url?: string;
 }
 
 interface AuthContextType {
@@ -20,6 +22,8 @@ interface AuthContextType {
   signup: (email: string, password: string, name: string, role: UserRole) => Promise<{ error?: string }>;
   logout: () => Promise<void>;
   hasRole: (roles: UserRole[]) => boolean;
+  updateProfile: (data: { name: string; avatar_url?: string }) => Promise<{ error?: string }>;
+  updatePassword: (currentPassword: string, newPassword: string) => Promise<{ error?: string }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -66,7 +70,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setUser({
               id: profile.id,
               name: profile.name,
-              role: profile.role as UserRole
+              role: profile.role as UserRole,
+              email: session.user.email!,
+              avatar_url: profile.avatar_url
             });
           }
         } else {
@@ -162,6 +168,51 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return roles.includes(user.role);
   };
 
+  const updateProfile = async (data: { name: string; avatar_url?: string }) => {
+    try {
+      if (!user) return { error: 'Usuário não encontrado' };
+
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          name: data.name,
+          avatar_url: data.avatar_url
+        })
+        .eq('id', user.id);
+
+      if (error) {
+        return { error: error.message };
+      }
+
+      // Update local user state
+      setUser(prev => prev ? {
+        ...prev,
+        name: data.name,
+        avatar_url: data.avatar_url
+      } : null);
+
+      return {};
+    } catch (error: any) {
+      return { error: error.message };
+    }
+  };
+
+  const updatePassword = async (currentPassword: string, newPassword: string) => {
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword
+      });
+
+      if (error) {
+        return { error: error.message };
+      }
+
+      return {};
+    } catch (error: any) {
+      return { error: error.message };
+    }
+  };
+
   const value: AuthContextType = {
     user,
     session,
@@ -171,6 +222,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signup,
     logout,
     hasRole,
+    updateProfile,
+    updatePassword,
   };
 
   return (
